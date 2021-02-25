@@ -142,4 +142,17 @@ if templatedata["configurations"]["phoneSettings"]:
         # the elements to the AXL Update Method.  Referencing phone=templatedata["phone"]
         # generates a type error.  Other AXL Methods seem to work (list and add methods)
         response = service.updatePhone(**templatedata["phone"])
-    print(response)
+
+#Jabber Soft Phone
+if templatedata["configurations"]["jabberCSF"]:
+    
+    #Define the settings
+    templatedata["jabberCSF"]["name"] = newUserPhone
+    templatedata["jabberCSF"]["description"] = UserFullName + templatedata["phone"]["description"]
+    templatedata["jabberCSF"]["ownerUserName"]["_value_1"] = UserID
+    templatedata["jabberCSF"]["mobilityUserIdName"]["_value_1"] = UserID
+    templatedata["jabberCSF"]["lines"]["line"][0]["label"] = UserFullName
+    templatedata["jabberCSF"]["lines"]["line"][0]["display"] = UserFullName
+    templatedata["jabberCSF"]["lines"]["line"][0]["displayAscii"] = UserFullName
+    templatedata["jabberCSF"]["lines"]["line"][0]["dirn"]["pattern"] = Extension
+    templatedata["jabberCSF"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
