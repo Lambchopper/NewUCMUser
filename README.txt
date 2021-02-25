@@ -19,3 +19,15 @@ SOAP objects in to a JSON format, we will be using JSON as our template file sto
 
 This allows us to dump the Zeep results from a simple AXL query for use in building templates and extending
 script functionality later as required.
+
+Note: the GIT Repository does not include the JSON Files or the .env file.
+this is to protect confidential configuration data.  The .env file is used
+to store the UCM server URL and Credentials and will be replaced with login
+prompts in the final version.  A sanitized sample JSON file will be added
+to the last commit for reference.
+
+Required Modules:
+Zeep		Soap Client for AXL interactions
+urllib3		Used for the HTTPS interactions with UCM
+json		Used for retrieving and utilizing stored templates (Zeep formats the Soap data in to a JSON compatible format)
+
