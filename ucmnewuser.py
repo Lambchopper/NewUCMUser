@@ -55,10 +55,71 @@ with open(filename, 'r') as file:
 
 #Collect new user specifics, this will be replaced
 #by logic to prompt for this data
-UserFullName = 'John Dough'
-UserID = 'jdough'
-Extension = '5775'
-newUserPhone = "SEP111122223333"
+UserFullName = "John Dough"
+UserID = "jdough"
+Extension = "5775"
+global newUserPhone = "SEP111122223333"
+
+def ConfigurePhone(devType, UID, UFullName, Extn, template)
+    #If we're not configuring a Phone, we must be configuring Jabber Soft Phones
+    if not devType = "phone":
+        #Define the Device name so that it is the Template Prefix + the UserID in Caps
+        jabberDevPrefix = template[devType]["name"]
+        jabberDevPrefix = jabberDevPrefix.upper()
+        jabberDeviceName = jabberDevPrefix.strip() + UserID.upper()
+        template[devType]["name"] = jabberDeviceName
+    else:
+        template[devType]["name"] = newUserPhone
+
+    #Setup the rest of the user specific settings at the device Level
+    template[devType]["ownerUserName"]["_value_1"] = UserID
+    template[devType]["mobilityUserIdName"]["_value_1"] = UserID
+
+    #If Logged Out Extension is True, we're configuring a generic extension on the Physical Phone for EM
+    #Else we are putting the user's extension directly on the phone
+    if template["configurations"]["loggedOutExtension"]:
+        template[devType]["lines"]["line"][0]["label"] = template["configurations"]["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["display"] = template["configurations"]["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["displayAscii"] = template["configurations"]["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["e164Mask"] = template["configurations"]["loggedOutExtension"]["e164Mask"]
+        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["configurations"]["loggedOutExtension"]["pattern"]
+        template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+            template["configurations"]["loggedOutExtension"]["routePartitionName"]
+
+    else:
+        template[devType]["lines"]["line"][0]["label"] = UFullName
+        template[devType]["lines"]["line"][0]["display"] = UFullName
+        template[devType]["lines"]["line"][0]["displayAscii"] = UFullName
+        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = Extn
+        template[devType]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UID
+
+    #Find if the phone object exists yet
+    response = service.listPhone(searchCriteria={'name': template[devType]["name"]}, returnedTags={'name': ''})
+    
+    #if the phone object does not exist, use the addPhone API call to add it
+    #Else, remove the read-only elements and use the updatePhone API call to update the existing object
+    if not response['return']:
+        print("*"*75)
+        print("The phone entered does not exist, we will add it")
+        print("*"*75)
+        response = service.addPhone(phone=template[devType])
+    else:
+        print("="*75)
+        print("The phone entered exists, we will be updating it")
+        print("="*75)
+        
+        #Remove Keys that are only supported by the addPhone method
+        template[devType].pop("product")
+        template[devType].pop("protocol")
+        template[devType].pop("class")
+
+        #Debug Command, Remove in final tool
+        #print(json.dumps(template["phone"], indent=4, separators=(',', ': ')))
+
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updatePhone(**template[devType])
 
 #Amend the Directory Number settings to Line Profile settings
 if templatedata["configurations"]["directoryNumber"]:
@@ -111,48 +172,8 @@ if templatedata["configurations"]["deviceProfile"]:
 #If the template wants to change phone settings then
 #Check if Phone Exists update Phone, If Phone Does Not Exist add it
 if templatedata["configurations"]["phoneSettings"]: 
-    
-    #Define the settings
-    templatedata["phone"]["name"] = newUserPhone
-    templatedata["phone"]["description"] = UserFullName + templatedata["phone"]["description"]
-    templatedata["phone"]["ownerUserName"]["_value_1"] = UserID
-    templatedata["phone"]["mobilityUserIdName"]["_value_1"] = UserID
-    
-    response = service.listPhone(searchCriteria={'name': newUserPhone}, returnedTags={'name': ''})
-    
-    if not response['return']:
-        print("*"*75)
-        print("The phone entered does not exist, we will add it")
-        print("*"*75)
-        response = service.addPhone(phone=templatedata["phone"])
-    else:
-        print("="*75)
-        print("The phone entered exists, we will be updating it")
-        print("="*75)
-        
-        #Remove Keys that are only supported by the addPhone method
-        templatedata["phone"].pop("product")
-        templatedata["phone"].pop("protocol")
-        templatedata["phone"].pop("class")
-
-        #Debug Command, Remove in final tool
-        #print(json.dumps(templatedata["phone"], indent=4, separators=(',', ': ')))
-
-        #For some reason, the dictionary needs to use the ** to pass
-        # the elements to the AXL Update Method.  Referencing phone=templatedata["phone"]
-        # generates a type error.  Other AXL Methods seem to work (list and add methods)
-        response = service.updatePhone(**templatedata["phone"])
+    ConfigurePhone("phone", UserID, UserFullName, Extension, templatedata)    
 
 #Jabber Soft Phone
 if templatedata["configurations"]["jabberCSF"]:
-    
-    #Define the settings
-    templatedata["jabberCSF"]["name"] = newUserPhone
-    templatedata["jabberCSF"]["description"] = UserFullName + templatedata["phone"]["description"]
-    templatedata["jabberCSF"]["ownerUserName"]["_value_1"] = UserID
-    templatedata["jabberCSF"]["mobilityUserIdName"]["_value_1"] = UserID
-    templatedata["jabberCSF"]["lines"]["line"][0]["label"] = UserFullName
-    templatedata["jabberCSF"]["lines"]["line"][0]["display"] = UserFullName
-    templatedata["jabberCSF"]["lines"]["line"][0]["displayAscii"] = UserFullName
-    templatedata["jabberCSF"]["lines"]["line"][0]["dirn"]["pattern"] = Extension
-    templatedata["jabberCSF"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
+    ConfigurePhone("jabberCSF", UserID, UserFullName, Extension, templatedata)

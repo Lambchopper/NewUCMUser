@@ -1,5 +1,6 @@
+================================================================================
 Cisco UC New User Automation
-
+================================================================================
 This tool is being designed so that new hires can be inserted in to Cisco Call Manager in a controlled and 
 automated way maintaining naming convension stanadards.  The goal is consistancy of deployment so that new
 user accounts are not configured incorrectly requiring immediate troubleshooting.
@@ -20,14 +21,64 @@ SOAP objects in to a JSON format, we will be using JSON as our template file sto
 This allows us to dump the Zeep results from a simple AXL query for use in building templates and extending
 script functionality later as required.
 
-Note: the GIT Repository does not include the JSON Files or the .env file.
-this is to protect confidential configuration data.  The .env file is used
-to store the UCM server URL and Credentials and will be replaced with login
-prompts in the final version.  A sanitized sample JSON file will be added
-to the last commit for reference.
+================================================================================
+Miscellaneous Notes
+================================================================================
+Note1:
+The GIT Repository does not include the JSON Files or the .env file. this is to protect confidential
+configuration data.  The .env file is used to store the UCM server URL and Credentials and will be replaced
+with login prompts in the final version.  A sanitized sample JSON file will be added to the last commit
+for reference.
 
+Cisco's AXL Git repo has more info on using .env for passing credentials:
+https://github.com/CiscoDevNet/axl-python-zeep-samples
+
+Note2:
+The dumpucmconfig.py is a rough script used to execute AXL queries for configuration items and dump them
+to JSON files for use in building templates.  Modify this script with an object of interest and the
+appropriate AXL Get or List Method.
+
+More info on the AXL API can be found here, including the full Schema reference:
+https://developer.cisco.com/docs/axl/
+
+================================================================================
 Required Modules:
+================================================================================
 Zeep		Soap Client for AXL interactions
 urllib3		Used for the HTTPS interactions with UCM
 json		Used for retrieving and utilizing stored templates (Zeep formats the Soap data in to a JSON compatible format)
 
+================================================================================
+Template file Configurations:
+================================================================================
+The Configurations section at tthe top of the template files is used to define which UCM configuration
+elements will be configured.  The template contains each configuration as a section.
+
+# Definitions:
+"configurations": {
+	"deviceProfile": [true|false]
+		Use the "deviceProfile" section to configure an Extension Mobility Profile.  This will only
+		add a new device profile.
+	"loggedOutExtension": [true|false]
+		This will trigger the script to use the settings in the loggedOutExtension for the physical
+		phone if set to true.  False will set the user's extension passed to the script.  To be used
+		in environments where Extension mobility is used and the Physical phone requires a non-routable
+		or generic hoteling extension.
+	"directoryNumber": [true|false]
+		Used for testing to enable/disable directory number changes.  WILL BE CHANGED IN FINAL SCRIPT
+		TO USE TO DETERMINE IF USER EXTENSION OR GENERIC EXTENSION IS CONFIGURED ON PYSICAL PHONE FOR
+		CASES WHERE THEY ARE DIFFERENT (EG: EXTENSION MOBILITY)
+	"phoneSettings": [true|false]
+		Use the "phone" section to configure a physical phone.  Configuring a physical phone may not be
+		necessary in environments that rely on extension mobility.
+	"jabberCSF": [true|false]
+		Use the "jabberCSF" section to configure a Jabber Soft Phone Profile.
+	"jabberAndroid": [true|false]
+		Use the "jabberAndroid" section to configure a Jabber Soft Phone Profile for Android (BOT).
+	"jabberiPhone": [true|false]
+		Use the "jabberiPhone" section to configure a Jabber Soft Phone Profile for iPhone (TCT).
+	"jabberTablet": [true|false]
+	"SNR": [true|false]
+	"speeddials": [true|false]
+	"CCX": [true|false]
+	},
