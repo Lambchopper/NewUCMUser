@@ -6,6 +6,9 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+#Import Stuff for flow cotrol
+import sys
+
 #Import Stuff for data processing
 import json
 
@@ -44,8 +47,19 @@ service = client.create_service(binding, location)
 #===================Setup Zeep Soap Client===================
 
 
-#===================Test Logic Below===================
+#===================Setup Variables===================
+#Setup Variables for the script
+global newUserPhone
+listConfiguredDevices = []
 
+#Collect new user specifics
+#This will be replaced by logic to prompt for this data
+UserFullName = "John Dough"
+UserID = "jdough"
+Extension = "5775"
+newUserPhone = "SEP111122223333"
+
+#===================Read the Template File from Disk===================
 #Read the JSON Template File
 #Template Selection Logic to be added later
 filename = "StandardUserTemplate.JSON"
@@ -53,16 +67,10 @@ filename = "StandardUserTemplate.JSON"
 with open(filename, 'r') as file:
     templatedata = json.load(file)
 
-#Collect new user specifics, this will be replaced
-#by logic to prompt for this data
-UserFullName = "John Dough"
-UserID = "jdough"
-Extension = "5775"
-global newUserPhone = "SEP111122223333"
-
-def ConfigurePhone(devType, UID, UFullName, Extn, template)
-    #If we're not configuring a Phone, we must be configuring Jabber Soft Phones
-    if not devType = "phone":
+#===================Define Function used to add Phone objects===================
+def ConfigurePhone(devType, UID, UFullName, Extn, template):
+    #If we're not configuring a physical phone, we must be configuring Jabber soft phones
+    if not devType == "phone":
         #Define the Device name so that it is the Template Prefix + the UserID in Caps
         jabberDevPrefix = template[devType]["name"]
         jabberDevPrefix = jabberDevPrefix.upper()
@@ -70,21 +78,21 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template)
         template[devType]["name"] = jabberDeviceName
     else:
         template[devType]["name"] = newUserPhone
-
+        
     #Setup the rest of the user specific settings at the device Level
+    template[devType]["description"] = UserFullName + template[devType]["description"]
     template[devType]["ownerUserName"]["_value_1"] = UserID
     template[devType]["mobilityUserIdName"]["_value_1"] = UserID
 
     #If Logged Out Extension is True, we're configuring a generic extension on the Physical Phone for EM
     #Else we are putting the user's extension directly on the phone
-    if template["configurations"]["loggedOutExtension"]:
-        template[devType]["lines"]["line"][0]["label"] = template["configurations"]["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["display"] = template["configurations"]["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["displayAscii"] = template["configurations"]["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["e164Mask"] = template["configurations"]["loggedOutExtension"]["e164Mask"]
-        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["configurations"]["loggedOutExtension"]["pattern"]
-        template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
-            template["configurations"]["loggedOutExtension"]["routePartitionName"]
+    if template["configurations"]["loggedOutExtension"] and devType == "phone":
+        template[devType]["lines"]["line"][0]["label"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["display"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["displayAscii"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["e164Mask"] = template["loggedOutExtension"]["e164Mask"]
+        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["loggedOutExtension"]["pattern"]
+        template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = template["loggedOutExtension"]["routePartitionName"]
 
     else:
         template[devType]["lines"]["line"][0]["label"] = UFullName
@@ -99,13 +107,17 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template)
     #if the phone object does not exist, use the addPhone API call to add it
     #Else, remove the read-only elements and use the updatePhone API call to update the existing object
     if not response['return']:
-        print("*"*75)
-        print("The phone entered does not exist, we will add it")
-        print("*"*75)
+        print("="*75)
+        print("The Device Type " + devType + ": " + template[devType]["name"] + " does not exist, we will add it")
+        print("="*75)
+        
+        #Debug Command, Remove in final tool
+        #print(json.dumps(template[devType], indent=4, separators=(',', ': ')))
+
         response = service.addPhone(phone=template[devType])
     else:
         print("="*75)
-        print("The phone entered exists, we will be updating it")
+        print("The Device Type " + devType + ": " + template[devType]["name"] + " exists, we will be updating it")
         print("="*75)
         
         #Remove Keys that are only supported by the addPhone method
@@ -113,15 +125,19 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template)
         template[devType].pop("protocol")
         template[devType].pop("class")
 
-        #Debug Command, Remove in final tool
-        #print(json.dumps(template["phone"], indent=4, separators=(',', ': ')))
-
         #For some reason, the dictionary needs to use the ** to pass
         # the elements to the AXL Update Method.  Referencing phone=template["phone"]
         # generates a type error.  Other AXL Methods seem to work (list and add methods)
         response = service.updatePhone(**template[devType])
+    
+    #Return the device name when the function is complete
+    return str(template[devType]["name"])
 
-#Amend the Directory Number settings to Line Profile settings
+#===================Directory Number===================
+#Amend the Directory Number settings if the extension does not exist
+#add it.  This must be done first in order for the Line Appearences to work
+#when configuring phones. If the DN is not present, changing the Line Appearences
+#will generate an error.
 if templatedata["configurations"]["directoryNumber"]:
     templatedata["line"]["pattern"] = Extension
     templatedata["line"]["description"] = UserFullName
@@ -136,13 +152,13 @@ if templatedata["configurations"]["directoryNumber"]:
     
     #If it doesn't exist, add it, otherwise update it.
     if not response['return']:
-        print("*"*75)
-        print("The Line entered does not exist, we will add it")
-        print("*"*75)
+        print("="*75)
+        print("The Directory Number " +  templatedata["line"]["pattern"] + " does not exist, we will add it")
+        print("="*75)
         response = service.addLine(line=templatedata["line"])
     else:
         print("="*75)
-        print("The Line entered exists, we will be updating it")
+        print("The Directory Number " +  templatedata["line"]["pattern"] + " exists, we will be updating it")
         print("="*75)
 
         #Remove Dictionary Key used to add a line, but is not used in the Update Method
@@ -152,8 +168,56 @@ if templatedata["configurations"]["directoryNumber"]:
         # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
         # generates a type error.  Other AXL Methods seem to work (list and add methods)
         response = service.updateLine(**templatedata["line"]) 
+else:
+    #if the Directory Number in the template is disabled, check to see if the extension exists
+    response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
     
+    #If it doesn't exist, notify the user and terminate the script.
+    # we can't add devices with a Line Appearence if the DN doesn't already exist.
+    if not response['return']:
+        print("="*75)
+        print("The Directory Number " +  str(Extension) + " does not exist and the Template is not configured")
+        print("to add a DN.  Please choose a correct template or set the directoryNumber")
+        print("configuration in the current template to True. Terminating script.")
+        print("="*75)
 
+        #See ya, wouldn't want to be ya...
+        sys.exit()
+    else:
+        print("="*75)
+        print("The Directory Number " +  str(Extension) + " is present, the template is not configured to update it.")
+        print("="*75)
+    
+#===================Add/Update Phone Objects===================
+#Phones, Use above function to insert all Phone Types
+#And collect the device name returned for later association
+
+#Physical Phone
+if templatedata["configurations"]["phoneSettings"]: 
+    result = ConfigurePhone("phone", UserID, UserFullName, Extension, templatedata)    
+    listConfiguredDevices.append(result)
+
+#Jabber Soft Phone
+if templatedata["configurations"]["jabberCSF"]:
+    result = ConfigurePhone("jabberCSF", UserID, UserFullName, Extension, templatedata)
+    listConfiguredDevices.append(result)
+
+#Jabber Android Soft Phone
+if templatedata["configurations"]["jabberAndroid"]:
+    result = ConfigurePhone("jabberAndroid", UserID, UserFullName, Extension, templatedata)
+    listConfiguredDevices.append(result)
+
+#Jabber iPhone Soft Phone
+if templatedata["configurations"]["jabberiPhone"]:
+    result = ConfigurePhone("jabberiPhone", UserID, UserFullName, Extension, templatedata)
+    listConfiguredDevices.append(result)
+
+#Jabber Tablet Soft Phone
+if templatedata["configurations"]["jabberTablet"]:
+    result = ConfigurePhone("jabberTablet", UserID, UserFullName, Extension, templatedata)
+    listConfiguredDevices.append(result)
+
+#===================Add/Update Feature Objects===================
 #Amend user specific settings to Device Profile settings
 if templatedata["configurations"]["deviceProfile"]: 
     templatedata["deviceProfile"]["name"] = templatedata["deviceProfile"]["name"] + UserFullName
@@ -167,13 +231,3 @@ if templatedata["configurations"]["deviceProfile"]:
     print("="*75)
     print(templatedata["deviceProfile"])
     response = service.addDeviceProfile(deviceProfile=templatedata["deviceProfile"])
-
-#Physical Phones
-#If the template wants to change phone settings then
-#Check if Phone Exists update Phone, If Phone Does Not Exist add it
-if templatedata["configurations"]["phoneSettings"]: 
-    ConfigurePhone("phone", UserID, UserFullName, Extension, templatedata)    
-
-#Jabber Soft Phone
-if templatedata["configurations"]["jabberCSF"]:
-    ConfigurePhone("jabberCSF", UserID, UserFullName, Extension, templatedata)
