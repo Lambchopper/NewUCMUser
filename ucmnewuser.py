@@ -139,7 +139,7 @@ except:
 # all fields are editable for an LDAP User Account.
 if UserExists:
     if response["return"]["user"]["ldapDirectoryName"]["_value_1"] is None:
-        print(UserID + "exists as a Local End User in UCM")
+        print(UserID + " exists as a Local End User in UCM")
         print("="*75)
 
     else:
@@ -158,9 +158,6 @@ if UserExists:
         templatedata["user"].pop("mailid")
         templatedata["user"].pop("department")
         templatedata["user"].pop("manager")
-
-#Exit Script for getting User Logic to work without adding and deleting stoof from UCM
-sys.exit()
 
 #===================Define Function used to add Phone objects===================
 def ConfigurePhone(devType, UID, UFullName, Extn, template):
@@ -309,6 +306,23 @@ if templatedata["configurations"]["jabberiPhone"]:
 if templatedata["configurations"]["jabberTablet"]:
     result = ConfigurePhone("jabberTablet", UserID, UserFullName, Extension, templatedata)
     listConfiguredDevices.append(result)
+
+#Associate the Devices that were just created with the End User Account
+print("="*75)
+print("Associating phones with " + UserID + ".")
+print("="*75)
+
+#Create a Dictionary with just the items we need and pass them to the updateUser Method
+DevicesToAdd = {
+    "device": []
+}
+
+#Loop through the list and add the devices to t he dictionary variable
+for item in listConfiguredDevices:
+    DevicesToAdd["device"].append(item)
+
+#Send it to UCM to associate them with the user ID
+response = service.updateUser(userid=UserID,associatedDevices=DevicesToAdd)
 
 #===================Add Extension Mobility Profile===================
 #Amend user specific settings to Device Profile settings
