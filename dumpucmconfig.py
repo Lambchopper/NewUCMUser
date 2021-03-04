@@ -49,16 +49,17 @@ print("Collect UCM Object")
 print("="*50)
 
 #Change Object Type for personal Reference
-ucmObjectType = "DN"
+ucmObjectType = "getUser"
 #Set ucmObject Variable for your needs
 #ucmObject = '{4826E8A0-2143-0653-7EBF-1ECF441E3097}'
-ucmObject = 'RDI-Steve Drgon'
+ucmObject = 'dlamb'
 
 #uncomment as neessary (List Line to get UUID, Get Line to dump full DN results)
 #response = service.getLine(uuid=ucmObject)
 #response = service.listLine(searchCriteria={'pattern': ucmObject},returnedTags={'pattern': True,'description': True})
 #response = service.getPhone(name=ucmObject)
-response = service.listRemoteDestination(name=ucmObject)
+#response = service.listRemoteDestination(name=ucmObject)
+response = service.getUser(userid=ucmObject)
 
 print("="*50)
 print("Convert From Zeep Object to Dictionary")

@@ -54,10 +54,14 @@ listConfiguredDevices = []
 
 #Collect new user specifics
 #This will be replaced by logic to prompt for this data
-UserFullName = "John Dough"
+UserFirstName = "John"
+UserLastName = "Dough"
 UserID = "jdough"
 Extension = "5775"
 newUserPhone = "SEP111122223333"
+EmailAddress = "jdough@convergedtechgroup.com"
+
+UserFullName = UserFirstName + " " + UserLastName
 
 #===================Read the Template File from Disk===================
 #Read the JSON Template File
@@ -66,6 +70,97 @@ filename = "StandardUserTemplate.JSON"
 
 with open(filename, 'r') as file:
     templatedata = json.load(file)
+
+#===================Check if the user exists===================
+
+#Add the basic new user info to the template dictionary Variable
+templatedata["user"]["firstName"] = UserFirstName
+templatedata["user"]["displayName"] = UserFullName
+templatedata["user"]["lastName"] = UserLastName
+templatedata["user"]["userid"] = UserID
+templatedata["user"]["mailid"] = EmailAddress
+templatedata["user"]["directoryUri"] = EmailAddress
+templatedata["user"]["userIdentity"] = EmailAddress
+templatedata["user"]["nameDialing"] = UserLastName + UserFirstName
+templatedata["user"]["telephoneNumber"] = Extension
+templatedata["user"]["selfService"] = Extension
+
+#Check to see if the user account exists
+print("="*75)
+print("Checking UCM for User ID: " + UserID)
+print("="*75)
+
+#If we get a valid response without a Zeep Failure the User Exists
+#Otherwise if Zeep returns an Exception, user does not
+try:
+    response = service.getUser(userid=UserID)
+    UserExists = True
+except:
+    print("User Does Not Exist.")
+    print("="*75)
+    print("If this should be an LDAP Sychronized Account, Select (N)o and correct that.")
+    print("Otherwise select (Y)es to add the user as a UCM Local User")
+    print("="*75)
+    AddLocalUser = input("Y or N: ")
+    AddLocalUser = AddLocalUser.lower()
+    UserExists = False
+    
+    #Validate User Input
+    for i in range(1, 4):
+
+        #Three strikes and you're outta here!
+        if i == 3:
+            print("Incorrect Input, must be Y or N")
+            print("Failed too many times, terminating script")
+            print("="*75)
+            sys.exit()
+
+        #if the user entered the correct value, exit loop
+        #Else make them do it again.
+        if AddLocalUser == "y" or AddLocalUser == "n":
+            break
+        else:
+            AddLocalUser = input("Y or N: ")
+            AddLocalUser = AddLocalUser.lower()
+
+    #If the user selected No, Terminate Script    
+    if AddLocalUser == "n":
+        print("Terminating Script")
+        print("="*75)
+        sys.exit()
+    
+    #if we get here we are adding a new Local User
+    print("="*75)
+    print("Creating Enabled Local User: " + templatedata["user"]["displayName"])
+    print("="*75)
+    response = service.addUser(templatedata["user"])
+
+#If the user Exists we need to see if the user is LDAP Synced Or Not because not 
+# all fields are editable for an LDAP User Account.
+if UserExists:
+    if response["return"]["user"]["ldapDirectoryName"]["_value_1"] is None:
+        print(UserID + "exists as a Local End User in UCM")
+        print("="*75)
+
+    else:
+        print( UserID + "is synced from the " + response["return"]["user"]["ldapDirectoryName"]["_value_1"] + " LDAP Directory.")
+        print("="*75)
+        #We need to remove all Keys from the Dictionary that are not editable for LDAP users
+        templatedata["user"].pop("lastName")
+        templatedata["user"].pop("firstName")
+        templatedata["user"].pop("displayName")
+        templatedata["user"].pop("title")
+        templatedata["user"].pop("directoryUri")
+        templatedata["user"].pop("telephoneNumber")
+        templatedata["user"].pop("homeNumber")
+        templatedata["user"].pop("mobileNumber")
+        templatedata["user"].pop("pagerNumber")
+        templatedata["user"].pop("mailid")
+        templatedata["user"].pop("department")
+        templatedata["user"].pop("manager")
+
+#Exit Script for getting User Logic to work without adding and deleting stoof from UCM
+sys.exit()
 
 #===================Define Function used to add Phone objects===================
 def ConfigurePhone(devType, UID, UFullName, Extn, template):
@@ -93,6 +188,7 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template):
         template[devType]["lines"]["line"][0]["e164Mask"] = template["loggedOutExtension"]["e164Mask"]
         template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["loggedOutExtension"]["pattern"]
         template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = template["loggedOutExtension"]["routePartitionName"]
+        template[devType]["lines"]["line"][0].pop("associatedEndusers")
 
     else:
         template[devType]["lines"]["line"][0]["label"] = UFullName
@@ -255,9 +351,12 @@ if templatedata["configurations"]["SNR"]:
     templatedata["remoteDestination"]["destination"] = mobileNum
     templatedata["remoteDestination"]["remoteDestinationProfileName"] = templatedata["remoteDestinationProfile"]["name"]
     templatedata["remoteDestination"]["ownerUserId"] = UserID
+    templatedata["remoteDestination"]["lineAssociations"]["lineAssociation"]["pattern"] = Extension
+    templatedata["remoteDestination"]["lineAssociations"]["lineAssociation"]["routePartitionName"] = \
+        templatedata["line"]["routePartitionName"]["_value_1"]
 
     #Debug Command, Remove in final tool
-    print(json.dumps(templatedata["remoteDestination"], indent=4, separators=(',', ': ')))
+    #print(json.dumps(templatedata["remoteDestination"], indent=4, separators=(',', ': ')))
 
     print("="*75)
     print("Configuring the " + templatedata["remoteDestinationProfile"]["name"] + " Remote Destination Profile.")
@@ -270,11 +369,9 @@ if templatedata["configurations"]["SNR"]:
     print("="*75)
 
     #User ID must have Mobility enabled before this can be added LOGIC MUST BE ADDED
-    #Have to figure out how to check line association on Remote Destination
 
-    #Stuck on t his bug:
     #Had to modify the 12.0 Schema to fix this bug
     #https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvj13354
     #https://community.cisco.com/t5/management/minoccurs-settings-for-remotedestinationprofilename-and/td-p/3448674
-    #Line 17421 and 17436 in AXLSoap.xsd file
+    #Line 17421 and 17436 in AXLSoap.xsd file refernced in the AXL config at the top of this script.
     response = service.addRemoteDestination(templatedata["remoteDestination"])
