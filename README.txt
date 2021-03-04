@@ -24,7 +24,9 @@ script functionality later as required.
 ================================================================================
 Miscellaneous Notes
 ================================================================================
-Note1:
+---------------
+Note 1:
+---------------
 The GIT Repository does not include the JSON Files or the .env file. this is to protect confidential
 configuration data.  The .env file is used to store the UCM server URL and Credentials and will be replaced
 with login prompts in the final version.  A sanitized sample JSON file will be added to the last commit
@@ -33,13 +35,34 @@ for reference.
 Cisco's AXL Git repo has more info on using .env for passing credentials:
 https://github.com/CiscoDevNet/axl-python-zeep-samples
 
-Note2:
+---------------
+Note 2:
+---------------
 The dumpucmconfig.py is a rough script used to execute AXL queries for configuration items and dump them
 to JSON files for use in building templates.  Modify this script with an object of interest and the
 appropriate AXL Get or List Method.
 
 More info on the AXL API can be found here, including the full Schema reference:
 https://developer.cisco.com/docs/axl/
+
+---------------
+Note 3:
+---------------
+There is a bug that generates an error when attempting to insert the Remote Destination for an SNR
+configuration.
+    
+I had to modify the 12.0 Schema to fix this bug
+https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvj13354
+https://community.cisco.com/t5/management/minoccurs-settings-for-remotedestinationprofilename-and/td-p/3448674
+Line 17421 and 17436 in AXLSoap.xsd file where modified to set minOccurs="0" the default is 1
+The AXLSoap.xsd file to be modified will be the one referenced in the same folder as:
+wsdl = os.path.abspath('axlsqltoolkit/schema/current/AXLAPI.wsdl')
+
+This line may need to be changed due to the version of UCM you are using.  The current folder will house
+the schema of the UCM version that the API was downloaded from.  The version packaged with this script
+came from 12.0 of UCM.  The schema can be downloaded from:
+Cisco Unified CM Administration > Applications > Plugins > Cisco AXL Toolkit	
+	
 
 ================================================================================
 Required Modules:

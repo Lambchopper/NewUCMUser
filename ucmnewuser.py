@@ -144,9 +144,6 @@ if templatedata["configurations"]["directoryNumber"]:
     templatedata["line"]["alertingName"] = UserFullName
     templatedata["line"]["asciiAlertingName"] = UserFullName
 
-    #Debug Command, Remove in final tool
-    #print(json.dumps(templatedata["line"], indent=4, separators=(',', ': ')))
-
     #Check UCM to see if Extension Exists already
     response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
     
@@ -217,7 +214,7 @@ if templatedata["configurations"]["jabberTablet"]:
     result = ConfigurePhone("jabberTablet", UserID, UserFullName, Extension, templatedata)
     listConfiguredDevices.append(result)
 
-#===================Add/Update Feature Objects===================
+#===================Add Extension Mobility Profile===================
 #Amend user specific settings to Device Profile settings
 if templatedata["configurations"]["deviceProfile"]: 
     templatedata["deviceProfile"]["name"] = templatedata["deviceProfile"]["name"] + UserFullName
@@ -229,5 +226,55 @@ if templatedata["configurations"]["deviceProfile"]:
     templatedata["deviceProfile"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
 
     print("="*75)
-    print(templatedata["deviceProfile"])
+    print("Configuring the " + templatedata["deviceProfile"]["name"] + " Extension Mobility Profile.")
+    print("="*75)
+
     response = service.addDeviceProfile(deviceProfile=templatedata["deviceProfile"])
+
+#===================Add Single Number Reach===================
+if templatedata["configurations"]["SNR"]:
+    print("="*75)
+    print("This template has Single Number Reach Enabled.")
+    print("Please provide the user's Cell Phone Number.")
+    print("The number should be entered as dialed: EG 916318675309")
+    print("="*75)
+    mobileNum = input("Cell Number: ")
+    
+    #Configure the Remote Destination Profile
+    templatedata["remoteDestinationProfile"]["name"] = templatedata["remoteDestinationProfile"]["name"] + UserFullName
+    templatedata["remoteDestinationProfile"]["description"] = UserFullName
+    templatedata["remoteDestinationProfile"]["userId"] = UserID
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["label"] = UserFullName
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["display"] = UserFullName
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["dirn"]["pattern"] = Extension
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
+
+    #Configure the Remote Destination
+    templatedata["remoteDestination"]["name"] = templatedata["remoteDestination"]["name"] + UserFullName
+    templatedata["remoteDestination"]["destination"] = mobileNum
+    templatedata["remoteDestination"]["remoteDestinationProfileName"] = templatedata["remoteDestinationProfile"]["name"]
+    templatedata["remoteDestination"]["ownerUserId"] = UserID
+
+    #Debug Command, Remove in final tool
+    print(json.dumps(templatedata["remoteDestination"], indent=4, separators=(',', ': ')))
+
+    print("="*75)
+    print("Configuring the " + templatedata["remoteDestinationProfile"]["name"] + " Remote Destination Profile.")
+    print("="*75)
+
+    response = service.addRemoteDestinationProfile(templatedata["remoteDestinationProfile"])
+
+    print("="*75)
+    print("Configuring the " + templatedata["remoteDestination"]["name"] + " Remote Destination.")
+    print("="*75)
+
+    #User ID must have Mobility enabled before this can be added LOGIC MUST BE ADDED
+    #Have to figure out how to check line association on Remote Destination
+
+    #Stuck on t his bug:
+    #Had to modify the 12.0 Schema to fix this bug
+    #https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvj13354
+    #https://community.cisco.com/t5/management/minoccurs-settings-for-remotedestinationprofilename-and/td-p/3448674
+    #Line 17421 and 17436 in AXLSoap.xsd file
+    response = service.addRemoteDestination(templatedata["remoteDestination"])

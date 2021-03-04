@@ -17332,7 +17332,7 @@ Copyright (c) 2006, 2013 Cisco Systems, Inc.
         </xsd:complexContent>
     </xsd:complexType>
     <xsd:complexType name="ListDeviceProfileReq">
-        <xsd:sequence>
+        <xsd:sequence><xsd:documentation>The directory number to be associated. This directory number must be already associated to remote destination profile. </xsd:documentation>
             <xsd:element name="searchCriteria">
                 <xsd:annotation>
                     <xsd:documentation>At least one element under searchCriteria has to be mentioned</xsd:documentation>
@@ -17418,7 +17418,7 @@ Copyright (c) 2006, 2013 Cisco Systems, Inc.
                     <xsd:documentation>While UPDATE set it to false if you want to delete enable Unified Mobility feature.Use only while update</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
-            <xsd:element maxOccurs="1" minOccurs="1" name="remoteDestinationProfileName" nillable="true" type="axlapi:XFkType">
+            <xsd:element maxOccurs="1" minOccurs="0" name="remoteDestinationProfileName" nillable="true" type="axlapi:XFkType">
                 <xsd:annotation>
                     <xsd:documentation>If you are giving value to dualModeDeviceName then you can't give value to remoteDestinationProfileName,viceversa</xsd:documentation>
                 </xsd:annotation>
@@ -17433,7 +17433,7 @@ Copyright (c) 2006, 2013 Cisco Systems, Inc.
                     <xsd:documentation>ctiRemoteDeviceName tag will be used to associate either CTI Remote Device or a Spark Remote Device with a Remote Destination</xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
-            <xsd:element maxOccurs="1" minOccurs="1" name="dualModeDeviceName" nillable="true" type="axlapi:XFkType"/>
+            <xsd:element maxOccurs="1" minOccurs="0" name="dualModeDeviceName" nillable="true" type="axlapi:XFkType"/>
             <xsd:element default="false" maxOccurs="1" minOccurs="0" name="isMobilePhone" nillable="false" type="axlapi:boolean"/>
             <xsd:element default="true" maxOccurs="1" minOccurs="0" name="enableMobileConnect" nillable="false" type="axlapi:boolean"/>
             <xsd:element maxOccurs="1" minOccurs="0" name="lineAssociations">
