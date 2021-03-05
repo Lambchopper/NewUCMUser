@@ -46,6 +46,13 @@ client = Client(wsdl=wsdl, transport=transport)
 service = client.create_service(binding, location)
 #===================Setup Zeep Soap Client===================
 
+#===================Read the Template File from Disk===================
+#Read the JSON Template File
+#Template Selection Logic to be added later
+filename = "StandardUserTemplate.JSON"
+
+with open(filename, 'r') as file:
+    templatedata = json.load(file)
 
 #===================Setup Variables===================
 #Setup Variables for the script
@@ -63,13 +70,14 @@ EmailAddress = "jdough@convergedtechgroup.com"
 
 UserFullName = UserFirstName + " " + UserLastName
 
-#===================Read the Template File from Disk===================
-#Read the JSON Template File
-#Template Selection Logic to be added later
-filename = "StandardUserTemplate.JSON"
-
-with open(filename, 'r') as file:
-    templatedata = json.load(file)
+if templatedata["configurations"]["SNR"]:
+    print("="*75)
+    print("This template has Single Number Reach Enabled.")
+    print("Please provide the user's Cell Phone Number.")
+    print("The number should be entered as dialed: EG 916318675309")
+    print("="*75)
+    mobileNum = input("Cell Number: ")
+    print("="*75)
 
 #===================Check if the user exists===================
 
@@ -96,6 +104,7 @@ try:
     response = service.getUser(userid=UserID)
     UserExists = True
 except:
+    print("="*75)
     print("User Does Not Exist.")
     print("="*75)
     print("If this should be an LDAP Sychronized Account, Select (N)o and correct that.")
@@ -139,10 +148,12 @@ except:
 # all fields are editable for an LDAP User Account.
 if UserExists:
     if response["return"]["user"]["ldapDirectoryName"]["_value_1"] is None:
+        print("="*75)
         print(UserID + " exists as a Local End User in UCM")
         print("="*75)
 
     else:
+        print("="*75)
         print( UserID + "is synced from the " + response["return"]["user"]["ldapDirectoryName"]["_value_1"] + " LDAP Directory.")
         print("="*75)
         #We need to remove all Keys from the Dictionary that are not editable for LDAP users
@@ -328,7 +339,7 @@ response = service.updateUser(userid=UserID,associatedDevices=DevicesToAdd)
 #Amend user specific settings to Device Profile settings
 if templatedata["configurations"]["deviceProfile"]: 
     templatedata["deviceProfile"]["name"] = templatedata["deviceProfile"]["name"] + UserFullName
-    templatedata["deviceProfile"]["description"] = UserFullName + templatedata["deviceProfile"]["description"]
+    templatedata["deviceProfile"]["description"] = UserFullName + " " + templatedata["deviceProfile"]["description"]
     templatedata["deviceProfile"]["lines"]["line"][0]["label"] = UserFullName
     templatedata["deviceProfile"]["lines"]["line"][0]["display"] = UserFullName
     templatedata["deviceProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName
@@ -341,15 +352,15 @@ if templatedata["configurations"]["deviceProfile"]:
 
     response = service.addDeviceProfile(deviceProfile=templatedata["deviceProfile"])
 
+    #Associate Profile with End User account
+    #Create a Dictionary with just the items we need and pass them to the updateUser Method
+    ProfileToAdd = [{"profileName": templatedata["deviceProfile"]["name"]}]
+
+    response = service.updateUser(userid=UserID,phoneProfiles=ProfileToAdd)
+
 #===================Add Single Number Reach===================
 if templatedata["configurations"]["SNR"]:
-    print("="*75)
-    print("This template has Single Number Reach Enabled.")
-    print("Please provide the user's Cell Phone Number.")
-    print("The number should be entered as dialed: EG 916318675309")
-    print("="*75)
-    mobileNum = input("Cell Number: ")
-    
+   
     #Configure the Remote Destination Profile
     templatedata["remoteDestinationProfile"]["name"] = templatedata["remoteDestinationProfile"]["name"] + UserFullName
     templatedata["remoteDestinationProfile"]["description"] = UserFullName
@@ -372,6 +383,9 @@ if templatedata["configurations"]["SNR"]:
     #Debug Command, Remove in final tool
     #print(json.dumps(templatedata["remoteDestination"], indent=4, separators=(',', ': ')))
 
+    #User ID must have Mobility enabled before SNR can be configured
+    response = service.updateUser(userid=UserID,enableMobility="true")
+
     print("="*75)
     print("Configuring the " + templatedata["remoteDestinationProfile"]["name"] + " Remote Destination Profile.")
     print("="*75)
@@ -382,10 +396,9 @@ if templatedata["configurations"]["SNR"]:
     print("Configuring the " + templatedata["remoteDestination"]["name"] + " Remote Destination.")
     print("="*75)
 
-    #User ID must have Mobility enabled before this can be added LOGIC MUST BE ADDED
-
     #Had to modify the 12.0 Schema to fix this bug
     #https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvj13354
     #https://community.cisco.com/t5/management/minoccurs-settings-for-remotedestinationprofilename-and/td-p/3448674
     #Line 17421 and 17436 in AXLSoap.xsd file refernced in the AXL config at the top of this script.
     response = service.addRemoteDestination(templatedata["remoteDestination"])
+
