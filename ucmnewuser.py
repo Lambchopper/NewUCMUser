@@ -79,13 +79,17 @@ if templatedata["configurations"]["SNR"]:
     mobileNum = input("Cell Number: ")
     print("="*75)
 
+#If the template says to configure CCX and the the template is configured
+#to not use the Primary Line as the Agent line (E.G. not use a second extension)
+#then prompt the user for the New IPCC extension
 if templatedata["configurations"]["CCX"]:
-    print("="*75)
-    print("This template is enabled for a CCX Agent Extension.")
-    print("Please provide the extension we should configure for CCX.")
-    print("="*75)
-    ccxExtension = input("Agent Extension: ")
-    print("="*75)
+    if not templatedata["ccxParameters"]["agentLineUsePrimary"]:
+        print("="*75)
+        print("This template is enabled for a CCX Agent Extension.")
+        print("Please provide the extension we should configure for CCX.")
+        print("="*75)
+        ccxExtension = input("Agent Extension: ")
+        print("="*75)
 
 
 #===================Configuring the User Account===================
@@ -208,9 +212,9 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template):
         template[devType]["lines"]["line"][0].pop("associatedEndusers")
 
     else:
-        template[devType]["lines"]["line"][0]["label"] = UFullName
-        template[devType]["lines"]["line"][0]["display"] = UFullName
-        template[devType]["lines"]["line"][0]["displayAscii"] = UFullName
+        template[devType]["lines"]["line"][0]["label"] = UFullName + template[devType]["lines"]["line"][0]["label"]
+        template[devType]["lines"]["line"][0]["display"] = UFullName + template[devType]["lines"]["line"][0]["display"]
+        template[devType]["lines"]["line"][0]["displayAscii"] = UFullName + template[devType]["lines"]["line"][0]["displayAscii"]
         template[devType]["lines"]["line"][0]["dirn"]["pattern"] = Extn
         template[devType]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UID
 
@@ -252,9 +256,9 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template):
 #when configuring phones. If the DN is not present, changing the Line Appearences
 #will generate an error.
 templatedata["line"]["pattern"] = Extension
-templatedata["line"]["description"] = UserFullName
-templatedata["line"]["alertingName"] = UserFullName
-templatedata["line"]["asciiAlertingName"] = UserFullName
+templatedata["line"]["description"] = UserFullName + templatedata["line"]["description"]
+templatedata["line"]["alertingName"] = UserFullName + templatedata["line"]["alertingName"]
+templatedata["line"]["asciiAlertingName"] = UserFullName + templatedata["line"]["asciiAlertingName"]
 
 #Check UCM to see if Extension Exists already
 response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
@@ -334,9 +338,9 @@ response = service.updateUser(userid=UserID,associatedDevices=DevicesToAdd,prima
 if templatedata["configurations"]["deviceProfile"]: 
     templatedata["deviceProfile"]["name"] = templatedata["deviceProfile"]["name"] + UserFullName
     templatedata["deviceProfile"]["description"] = UserFullName + " " + templatedata["deviceProfile"]["description"]
-    templatedata["deviceProfile"]["lines"]["line"][0]["label"] = UserFullName
-    templatedata["deviceProfile"]["lines"]["line"][0]["display"] = UserFullName
-    templatedata["deviceProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName
+    templatedata["deviceProfile"]["lines"]["line"][0]["label"] = UserFullName + templatedata["deviceProfile"]["lines"]["line"][0]["label"]
+    templatedata["deviceProfile"]["lines"]["line"][0]["display"] = UserFullName + templatedata["deviceProfile"]["lines"]["line"][0]["display"]
+    templatedata["deviceProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName + templatedata["deviceProfile"]["lines"]["line"][0]["displayAscii"]
     templatedata["deviceProfile"]["lines"]["line"][0]["dirn"]["pattern"] = Extension
     templatedata["deviceProfile"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
 
@@ -359,9 +363,15 @@ if templatedata["configurations"]["SNR"]:
     templatedata["remoteDestinationProfile"]["name"] = templatedata["remoteDestinationProfile"]["name"] + UserFullName
     templatedata["remoteDestinationProfile"]["description"] = UserFullName
     templatedata["remoteDestinationProfile"]["userId"] = UserID
-    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["label"] = UserFullName
-    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["display"] = UserFullName
-    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["label"] = UserFullName + \
+        templatedata["remoteDestinationProfile"]["lines"]["line"][0]["label"]
+
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["display"] = UserFullName + \
+        templatedata["remoteDestinationProfile"]["lines"]["line"][0]["display"]
+
+    templatedata["remoteDestinationProfile"]["lines"]["line"][0]["displayAscii"] = UserFullName + \
+        templatedata["remoteDestinationProfile"]["lines"]["line"][0]["displayAscii"]
+
     templatedata["remoteDestinationProfile"]["lines"]["line"][0]["dirn"]["pattern"] = Extension
     templatedata["remoteDestinationProfile"]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UserID
 
@@ -397,14 +407,20 @@ if templatedata["configurations"]["SNR"]:
     response = service.addRemoteDestination(templatedata["remoteDestination"])
 
 #===================CCX Directory Number===================
-#Amend the Directory Number settings if the extension does not exist
-#add it.  This must be done first in order for the Line Appearences to work
-#when configuring phones. If the DN is not present, changing the Line Appearences
-#will generate an error.
+#Configure the user for CCX if the template says to
 if templatedata["configurations"]["CCX"]:
+
     if templatedata["ccxParameters"]["agentLineUsePrimary"]:
-        #Configure the extension we added above as the Agent Line
-    
+        #Configure the extension we added as the primary line to also function as the Agent Line
+        #We will assume that the alerting and display names are all set when the primary line is defined above
+        #So we just need to set the IPCC extension on the user account and assign the phone to the RMCM Account
+
+        #Send it to UCM to associate the phones and set the Primary extension with the user ID
+        response = service.updateUser(userid=UserID,ipccExtension=templatedata["line"]["pattern"],\
+            ipccRoutePartition=templatedata["line"]["routePartitionName"]["_value_1"])
+
+
+
     else:
         templatedata["ccxline"]["pattern"] = ccxExtension
         templatedata["ccxline"]["description"] = UserFullName + templatedata["ccxline"]["description"]

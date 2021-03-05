@@ -108,6 +108,31 @@ elements will be configured.  The template contains each configuration as a sect
 			Set agentLineUsePrimary to false for a second Agent Line
 			Set agentLineUsePrimary to true if your design calls for the agent's Primary Line to be set
 			as the CCX Agent Line.  
+				If True the Alerting and Display Names will be configured by the line appearence settings
+				under the Phone configuration section of the template.
 			Set the jtapiRMCMUser parameter to be the UCM application user used by CCX for Resource Management.
 				In CCX Navigate to Unified CCX Administration > System > Cisco Unified CM Configuration and 
 				use the User ID in the RmCm Subsystem section.
+				
+
+Configuration Item Names (E.G. Device Profiles, Mobility Profiles) will add the template contents as
+as a prefix with the user's full name:
+For Example if the Template is configured like this:
+    "deviceProfile": {
+        "name": "EM-",
+
+The for the user John Dough, the result will be a Device Profile with the name:
+	EM-John Dough
+
+For Line Appearence Fields like ASCII Text, Line Lable Alerting Name and Display name, the template will
+add a suffix.  These fields can be left at "" to just have these fields result in the full user name.
+For Example:
+    	"lines": {
+            "line": [
+			    {
+                    "index": 1,
+                    "label": " Agent Line",
+                    "display": " Agent Line",
+					
+Results in:
+	"John Dough Agent Line"
