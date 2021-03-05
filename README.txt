@@ -69,7 +69,13 @@ Required Modules:
 ================================================================================
 Zeep		Soap Client for AXL interactions
 urllib3		Used for the HTTPS interactions with UCM
-json		Used for retrieving and utilizing stored templates (Zeep formats the Soap data in to a JSON compatible format)
+json		Used for retrieving and utilizing stored templates (Zeep formats the Soap data in to a JSON 
+			compatible format)
+dotenv		This can be used to automate the UCM authentication.  It requires a text file that hard codes
+			the UCM UID and PWD.  For security purposes this should only be used in testing. This script
+			will prompt for user IDs and PWDs in its final form, but the presence of this module is there
+			to speed debugging.  More information and exammples can be found here:
+			https://github.com/CiscoDevNet/axl-python-zeep-samples
 
 ================================================================================
 Template file Configurations:
