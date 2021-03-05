@@ -79,7 +79,16 @@ if templatedata["configurations"]["SNR"]:
     mobileNum = input("Cell Number: ")
     print("="*75)
 
-#===================Check if the user exists===================
+if templatedata["configurations"]["CCX"]:
+    print("="*75)
+    print("This template is enabled for a CCX Agent Extension.")
+    print("Please provide the extension we should configure for CCX.")
+    print("="*75)
+    ccxExtension = input("Agent Extension: ")
+    print("="*75)
+
+
+#===================Configuring the User Account===================
 
 #Add the basic new user info to the template dictionary Variable
 templatedata["user"]["firstName"] = UserFirstName
@@ -242,53 +251,34 @@ def ConfigurePhone(devType, UID, UFullName, Extn, template):
 #add it.  This must be done first in order for the Line Appearences to work
 #when configuring phones. If the DN is not present, changing the Line Appearences
 #will generate an error.
-if templatedata["configurations"]["directoryNumber"]:
-    templatedata["line"]["pattern"] = Extension
-    templatedata["line"]["description"] = UserFullName
-    templatedata["line"]["alertingName"] = UserFullName
-    templatedata["line"]["asciiAlertingName"] = UserFullName
+templatedata["line"]["pattern"] = Extension
+templatedata["line"]["description"] = UserFullName
+templatedata["line"]["alertingName"] = UserFullName
+templatedata["line"]["asciiAlertingName"] = UserFullName
 
-    #Check UCM to see if Extension Exists already
-    response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
-    
-    #If it doesn't exist, add it, otherwise update it.
-    if not response['return']:
-        print("="*75)
-        print("The Directory Number " +  templatedata["line"]["pattern"] + " does not exist, we will add it")
-        print("="*75)
-        response = service.addLine(line=templatedata["line"])
-    else:
-        print("="*75)
-        print("The Directory Number " +  templatedata["line"]["pattern"] + " exists, we will be updating it")
-        print("="*75)
+#Check UCM to see if Extension Exists already
+response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
 
-        #Remove Dictionary Key used to add a line, but is not used in the Update Method
-        templatedata["line"].pop("usage")
+#If it doesn't exist, add it, otherwise update it.
+if not response['return']:
+    print("="*75)
+    print("The Directory Number " +  templatedata["line"]["pattern"] + " does not exist, we will add it")
+    print("="*75)
+    response = service.addLine(line=templatedata["line"])
 
-        #For some reason, the dictionary needs to use the ** to pass
-        # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
-        # generates a type error.  Other AXL Methods seem to work (list and add methods)
-        response = service.updateLine(**templatedata["line"]) 
 else:
-    #if the Directory Number in the template is disabled, check to see if the extension exists
-    response = service.listLine(searchCriteria={'pattern': Extension}, returnedTags={'pattern': ''})
-    
-    #If it doesn't exist, notify the user and terminate the script.
-    # we can't add devices with a Line Appearence if the DN doesn't already exist.
-    if not response['return']:
-        print("="*75)
-        print("The Directory Number " +  str(Extension) + " does not exist and the Template is not configured")
-        print("to add a DN.  Please choose a correct template or set the directoryNumber")
-        print("configuration in the current template to True. Terminating script.")
-        print("="*75)
+    print("="*75)
+    print("The Directory Number " +  templatedata["line"]["pattern"] + " exists, we will be updating it")
+    print("="*75)
 
-        #See ya, wouldn't want to be ya...
-        sys.exit()
-    else:
-        print("="*75)
-        print("The Directory Number " +  str(Extension) + " is present, the template is not configured to update it.")
-        print("="*75)
-    
+    #Remove Dictionary Key used to add a line, but is not used in the Update Method
+    templatedata["line"].pop("usage")
+
+    #For some reason, the dictionary needs to use the ** to pass
+    # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
+    # generates a type error.  Other AXL Methods seem to work (list and add methods)
+    response = service.updateLine(**templatedata["line"]) 
+        
 #===================Add/Update Phone Objects===================
 #Phones, Use above function to insert all Phone Types
 #And collect the device name returned for later association
@@ -320,20 +310,24 @@ if templatedata["configurations"]["jabberTablet"]:
 
 #Associate the Devices that were just created with the End User Account
 print("="*75)
-print("Associating phones with " + UserID + ".")
+print("Associating phones and extension with " + UserID + ".")
 print("="*75)
 
-#Create a Dictionary with just the items we need and pass them to the updateUser Method
+#Create a Dictionary for the phones we need associate
 DevicesToAdd = {
     "device": []
 }
 
-#Loop through the list and add the devices to t he dictionary variable
+#Loop through the list and add the phones to the dictionary variable
 for item in listConfiguredDevices:
     DevicesToAdd["device"].append(item)
 
-#Send it to UCM to associate them with the user ID
-response = service.updateUser(userid=UserID,associatedDevices=DevicesToAdd)
+#Define a list variable with the extension info for the Primary Line
+#this has to be done after the phones are created
+ExtensionToAdd = [{"pattern": templatedata["line"]["pattern"],"routePartitionName": templatedata["line"]["routePartitionName"]["_value_1"]}]
+
+#Send it to UCM to associate the phones and set the Primary extension with the user ID
+response = service.updateUser(userid=UserID,associatedDevices=DevicesToAdd,primaryExtension=ExtensionToAdd)
 
 #===================Add Extension Mobility Profile===================
 #Amend user specific settings to Device Profile settings
@@ -402,3 +396,40 @@ if templatedata["configurations"]["SNR"]:
     #Line 17421 and 17436 in AXLSoap.xsd file refernced in the AXL config at the top of this script.
     response = service.addRemoteDestination(templatedata["remoteDestination"])
 
+#===================CCX Directory Number===================
+#Amend the Directory Number settings if the extension does not exist
+#add it.  This must be done first in order for the Line Appearences to work
+#when configuring phones. If the DN is not present, changing the Line Appearences
+#will generate an error.
+if templatedata["configurations"]["CCX"]:
+    if templatedata["ccxParameters"]["agentLineUsePrimary"]:
+        #Configure the extension we added above as the Agent Line
+    
+    else:
+        templatedata["ccxline"]["pattern"] = ccxExtension
+        templatedata["ccxline"]["description"] = UserFullName + templatedata["ccxline"]["description"]
+        templatedata["ccxline"]["alertingName"] = UserFullName + templatedata["ccxline"]["alertingName"]
+        templatedata["ccxline"]["asciiAlertingName"] = UserFullName + templatedata["ccxline"]["asciiAlertingName"]
+    
+        #Check UCM to see if Extension Exists already
+        response = service.listLine(searchCriteria={'pattern': ccxExtension}, returnedTags={'pattern': ''})
+        
+        #If it doesn't exist, add it, otherwise update it.
+        if not response['return']:
+            print("="*75)
+            print("The Directory Number " +  templatedata["ccxline"]["pattern"] + " does not exist, we will add it")
+            print("="*75)
+            response = service.addLine(line=templatedata["ccxline"])
+    
+        else:
+            print("="*75)
+            print("The Directory Number " +  templatedata["ccxline"]["pattern"] + " exists, we will be updating it")
+            print("="*75)
+    
+            #Remove Dictionary Key used to add a line, but is not used in the Update Method
+            templatedata["line"].pop("usage")
+    
+            #For some reason, the dictionary needs to use the ** to pass
+            # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
+            # generates a type error.  Other AXL Methods seem to work (list and add methods)
+            response = service.updateLine(**templatedata["ccxline"]) 

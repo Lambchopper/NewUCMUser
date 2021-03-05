@@ -87,10 +87,6 @@ elements will be configured.  The template contains each configuration as a sect
 		phone if set to true.  False will set the user's extension passed to the script.  To be used
 		in environments where Extension mobility is used and the Physical phone requires a non-routable
 		or generic hoteling extension.
-	"directoryNumber": [true|false]
-		Used for testing to enable/disable directory number changes.  WILL BE CHANGED IN FINAL SCRIPT
-		TO USE TO DETERMINE IF USER EXTENSION OR GENERIC EXTENSION IS CONFIGURED ON PYSICAL PHONE FOR
-		CASES WHERE THEY ARE DIFFERENT (EG: EXTENSION MOBILITY)
 	"phoneSettings": [true|false]
 		Use the "phone" section to configure a physical phone.  Configuring a physical phone may not be
 		necessary in environments that rely on extension mobility.
@@ -102,6 +98,16 @@ elements will be configured.  The template contains each configuration as a sect
 		Use the "jabberiPhone" section to configure a Jabber Soft Phone Profile for iPhone (TCT).
 	"jabberTablet": [true|false]
 	"SNR": [true|false]
+		Enables Mobility on the User account and creates the Remote Destination and Remote Destination Profile
 	"speeddials": [true|false]
 	"CCX": [true|false]
-	},
+		Configures the new user for CCX.  You must configure the ccxLine section of the template if your 
+		environment uses a seperate Agent Extension.  This will be configured as the Second line appearence
+		on the phone or Jabber Multiline Profile.
+		You must also configure the ccxParameters Section.
+			Set agentLineUsePrimary to false for a second Agent Line
+			Set agentLineUsePrimary to true if your design calls for the agent's Primary Line to be set
+			as the CCX Agent Line.  
+			Set the jtapiRMCMUser parameter to be the UCM application user used by CCX for Resource Management.
+				In CCX Navigate to Unified CCX Administration > System > Cisco Unified CM Configuration and 
+				use the User ID in the RmCm Subsystem section.
