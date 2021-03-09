@@ -110,16 +110,40 @@ elements will be configured.  The template contains each configuration as a sect
 		Configures the new user for CCX.  You must configure the ccxLine section of the template if your 
 		environment uses a seperate Agent Extension.  This will be configured as the Second line appearence
 		on the phone or Jabber Multiline Profile.
-		You must also configure the ccxParameters Section.
-			Set agentLineUsePrimary to false for a second Agent Line
-			Set agentLineUsePrimary to true if your design calls for the agent's Primary Line to be set
-			as the CCX Agent Line.  
-				If True the Alerting and Display Names will be configured by the line appearence settings
-				under the Phone configuration section of the template.
-			Set the jtapiRMCMUser parameter to be the UCM application user used by CCX for Resource Management.
+		
+		You must also configure the ccxParameters Section:
+			"agentLineUsePrimary":
+				false = Will add the CCX line as a second Agent Line on the phone.
+				true = Use if your design calls for the agent's Primary Line to be set as the CCX Agent Line.  
+					If True the Alerting and Display Names will be configured by the line appearence settings
+					under the Phone configuration section of the template.
+			"jtapiRMCMUser":
+				The value should be the UCM application user used by CCX for Resource Management.
 				In CCX Navigate to Unified CCX Administration > System > Cisco Unified CM Configuration and 
 				use the User ID in the RmCm Subsystem section.
+			"e164Mask":
+				The External Phone Number Mask for the CCX Agent Line Appearence
+			"lineLabelTxt":
+				The Prefix to add to the Line Label Text, this will use the extension as the suffix
+			"lineDisplayName":
+				See Below for Line appearence fields
+			"ipccDevType":
+				The Agent Line cannot be a Shared Line, this is a restriction for CCX. This field is used
+				to set which device will get  the agent line.  For users with a need for mobility, this
+				is typically defined on the Extension Mobility Profile so they can log in anyware.
 				
+				If this isn't set or set properly, the script will assume the Agent line is configured
+				on the physical phone.
+				
+				This parameter is only used if the agentLineUsePrimary is set to False.
+				
+					Set the values exactly as follows:
+						SEP = This will assign the CCX Agent Line to the Physical Phone
+						EMP = This will assign the CCX Agent Line to the Extension Mobility Device Profile
+							if EM is enabled in the Template.
+						CSF = This will assign the CCX Agent Line to the Jabber for Windows CSF Profile.
+							this requires that the cluster supports Jabber Multiline.  Refer to Cisco
+							documentation on Jabber Multiline Support.
 
 Configuration Item Names (E.G. Device Profiles, Mobility Profiles) will add the template contents as
 as a prefix with the user's full name:

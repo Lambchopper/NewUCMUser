@@ -419,8 +419,6 @@ if templatedata["configurations"]["CCX"]:
         response = service.updateUser(userid=UserID,ipccExtension=templatedata["line"]["pattern"],\
             ipccRoutePartition=templatedata["line"]["routePartitionName"]["_value_1"])
 
-
-
     else:
         templatedata["ccxline"]["pattern"] = ccxExtension
         templatedata["ccxline"]["description"] = UserFullName + templatedata["ccxline"]["description"]
@@ -449,3 +447,67 @@ if templatedata["configurations"]["CCX"]:
             # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
             response = service.updateLine(**templatedata["ccxline"]) 
+        
+        #Create a dictionary for the IPCC Line Appearence that we are going to configure
+        templatedata["ccxParameters"]["lineLabelTxt"] = templatedata["ccxParameters"]["lineLabelTxt"] + ccxExtension
+        templatedata["ccxParameters"]["lineDisplayName"] = UserFullName + templatedata["ccxParameters"]["lineDisplayName"]
+
+        #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
+        ipccLine = {
+                    "label": templatedata["ccxParameters"]["lineLabelTxt"],
+                    "display": templatedatatemplatedata["ccxParameters"]["lineDisplayName"],
+                    "dirn": {
+                        "pattern": ccxExtension,
+                        "routePartitionName": {
+                            "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
+                        }
+                    },
+                    "displayAscii": templatedatatemplatedata["ccxParameters"]["lineDisplayName"],
+                    "e164Mask": templatedata["ccxParameters"]["e164Mask"],
+                    "maxNumCalls": 2,
+                    "busyTrigger": 1
+        }
+
+        #Adding a line to a device wipes out existing lines so we need to get the current phone settings
+        #and apply the new IPCC line to the phone as line 2
+        #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
+        
+        #A CCX Agent Line can only be assigned to one device, it cannot be a shared line appearence
+        #So we will need to add it to the device type defined in the Template
+        ccxDeviceType = str(templatedata["ccxParameters"]["ipccDevType"]).upper
+
+        if templatedata["configurations"]["deviceProfile"] and ccxDeviceType == "EMP":
+            #Collect the Device Profile Information
+            ipccDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
+            
+            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
+            ipccDevice["return"]["deviceProfile"]["lines"]["line"].append
+
+            #Update the Line appearence
+            response = service.updateDeviceProfile(deviceProfile=ipccDevice["deviceProfile"])
+        
+        elif ccxDeviceType == "CSF":
+            #Collect the Device Profile Information
+            csfProfileName = ccxDeviceType + UserID.upper()
+            ipccDevice = service.getPhone(name=csfProfileName)
+
+            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
+            ipccDevice["return"]["phone"]["lines"]["line"].append
+
+            #For some reason, the dictionary needs to use the ** to pass
+            # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+            # generates a type error.  Other AXL Methods seem to work (list and add methods)
+            response = service.updatePhone(**ipccDevice["return"]["phone"])
+
+        else:
+            #Collect the Device Profile Information
+            ipccDevice = service.getPhone(name=newUserPhone)
+
+            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
+            ipccDevice["return"]["phone"]["lines"]["line"].append
+
+            #For some reason, the dictionary needs to use the ** to pass
+            # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+            # generates a type error.  Other AXL Methods seem to work (list and add methods)
+            response = service.updatePhone(**ipccDevice["return"]["phone"])
+
