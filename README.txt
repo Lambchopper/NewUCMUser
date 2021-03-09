@@ -135,6 +135,10 @@ elements will be configured.  The template contains each configuration as a sect
 				If this isn't set or set properly, the script will assume the Agent line is configured
 				on the physical phone.
 				
+				The Phone template defined in the template for the device you are adding a second line to
+				must have two lines.  If it doesn't manually changing the Button template on the phone will
+				add the new line.
+				
 				This parameter is only used if the agentLineUsePrimary is set to False.
 				
 					Set the values exactly as follows:

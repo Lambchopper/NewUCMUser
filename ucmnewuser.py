@@ -384,9 +384,6 @@ if templatedata["configurations"]["SNR"]:
     templatedata["remoteDestination"]["lineAssociations"]["lineAssociation"]["routePartitionName"] = \
         templatedata["line"]["routePartitionName"]["_value_1"]
 
-    #Debug Command, Remove in final tool
-    #print(json.dumps(templatedata["remoteDestination"], indent=4, separators=(',', ': ')))
-
     #User ID must have Mobility enabled before SNR can be configured
     response = service.updateUser(userid=UserID,enableMobility="true")
 
@@ -452,21 +449,39 @@ if templatedata["configurations"]["CCX"]:
         templatedata["ccxParameters"]["lineLabelTxt"] = templatedata["ccxParameters"]["lineLabelTxt"] + ccxExtension
         templatedata["ccxParameters"]["lineDisplayName"] = UserFullName + templatedata["ccxParameters"]["lineDisplayName"]
 
+        #Addint the second line appearence will remove the primary, so we have to include it
         #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
         ipccLine = {
-                    "label": templatedata["ccxParameters"]["lineLabelTxt"],
-                    "display": templatedatatemplatedata["ccxParameters"]["lineDisplayName"],
-                    "dirn": {
-                        "pattern": ccxExtension,
-                        "routePartitionName": {
-                            "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
-                        }
-                    },
-                    "displayAscii": templatedatatemplatedata["ccxParameters"]["lineDisplayName"],
-                    "e164Mask": templatedata["ccxParameters"]["e164Mask"],
-                    "maxNumCalls": 2,
-                    "busyTrigger": 1
-        }
+                    "name": "",
+                    "lines": {
+                        "line": [
+                            {
+                                "index": 1,
+                                "dirn": {
+                                    "pattern": "",
+                                    "routePartitionName": {
+                                        "_value_1": ""
+                                    }
+                                }
+                            },
+                            {
+                                "index": 2,
+                                "label": templatedata["ccxParameters"]["lineLabelTxt"],
+                                "display": templatedata["ccxParameters"]["lineDisplayName"],
+                                "dirn": {
+                                    "pattern": ccxExtension,
+                                    "routePartitionName": {
+                                        "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
+                                    }
+                                },
+                                "displayAscii": templatedata["ccxParameters"]["lineDisplayName"],
+                                "e164Mask": templatedata["ccxParameters"]["e164Mask"],
+                                "maxNumCalls": 2,
+                                "busyTrigger": 1
+                            }
+                        ]
+                    }
+                }
 
         #Adding a line to a device wipes out existing lines so we need to get the current phone settings
         #and apply the new IPCC line to the phone as line 2
@@ -474,8 +489,9 @@ if templatedata["configurations"]["CCX"]:
         
         #A CCX Agent Line can only be assigned to one device, it cannot be a shared line appearence
         #So we will need to add it to the device type defined in the Template
-        ccxDeviceType = str(templatedata["ccxParameters"]["ipccDevType"]).upper
-
+        ccxDeviceType = str(templatedata["ccxParameters"]["ipccDevType"])
+        ccxDeviceType = ccxDeviceType.upper()
+        
         if templatedata["configurations"]["deviceProfile"] and ccxDeviceType == "EMP":
             #Collect the Device Profile Information
             ipccDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
@@ -490,24 +506,39 @@ if templatedata["configurations"]["CCX"]:
             #Collect the Device Profile Information
             csfProfileName = ccxDeviceType + UserID.upper()
             ipccDevice = service.getPhone(name=csfProfileName)
+            ipccLine["name"] = csfProfileName
 
-            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
-            ipccDevice["return"]["phone"]["lines"]["line"].append
-
+            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
+                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
+            
+            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+            
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
-            response = service.updatePhone(**ipccDevice["return"]["phone"])
+            response = service.updatePhone(**ipccLine)
 
         else:
             #Collect the Device Profile Information
             ipccDevice = service.getPhone(name=newUserPhone)
+            ipccLine["name"] = newUserPhone
 
-            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
-            ipccDevice["return"]["phone"]["lines"]["line"].append
-
+            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
+                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
+            
+            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+            
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
-            response = service.updatePhone(**ipccDevice["return"]["phone"])
+            response = service.updatePhone(**ipccLine)
+
+        #Associate the IPCC Line with the user
+        response = service.updateUser(userid=UserID,ipccExtension=ccxExtension,ipccRoutePartition=templatedata["ccxline"]["routePartitionName"]["_value_1"])
+
+        #Next Associate Device with Application RMCM User
+        #Also seems to be a bug with updating existing IPCC line
+        #Also Test IPCC Line on EM Profile
 
