@@ -63,6 +63,20 @@ the schema of the UCM version that the API was downloaded from.  The version pac
 came from 12.0 of UCM.  The schema can be downloaded from:
 Cisco Unified CM Administration > Applications > Plugins > Cisco AXL Toolkit	
 	
+---------------
+Note 4:
+---------------
+I've encountered some gotchas like typo's in Cisco's AXL API Reference and different behaviors for the
+update and get methods of different AXL APIs.  That is why the Python code handles some of the variables
+used by these methods differently.  Notes have been made in the script comments where I've encountered
+these differences and in two cases documented Cisco Bugs.
+
+---------------
+Note 5:
+---------------
+This script so far has been tested against UCM 12.0.  Most of the AXL Calls should work for different
+versions of UCM.  But I did find, and have to test this against versions 11.5 and earlier as Cisco did
+change the schema around SNR.  So earlier versions may require some updates to this script.
 
 ================================================================================
 Required Modules:
