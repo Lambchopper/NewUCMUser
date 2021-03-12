@@ -61,41 +61,94 @@ with open(filename, 'r') as file:
 
 #===================Validate the Template File Settings===================
 if templatedata["configurations"]["CCX"]:
+    #Validate the CCX Parameters Section
     if templatedata["ccxParameters"]["ipccDevType"] == "CSF" and not templatedata["configurations"]["jabberCSF"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to CSF, but the Template is not set\n")
-        print("to configure a Jabber Windows Profile.  Terminating Script witout configuring CCX")
+        print("The template is miconfigured, The ipccDevType is set to CSF, but the")
+        print("Template is not set to configure a Jabber Windows Profile.")
+        print("Terminating Script.")
         print("="*75)
         sys.exit()
     
     if templatedata["ccxParameters"]["ipccDevType"] == "SEP" and not templatedata["configurations"]["phoneSettings"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to SEP, but the Template is not set")
-        print("to configure a Physical Phone.  Terminating Script witout configuring CCX")
+        print("The template is miconfigured, The ipccDevType is set to SEP, but the ")
+        print("template is not set to configure a Physical Phone.  Terminating Script.")
         print("="*75)
         sys.exit()
 
     if templatedata["ccxParameters"]["ipccDevType"] == "EMP" and not templatedata["configurations"]["phoneSettings"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to EMP, but the Template is not set")
-        print("to configure a EM Profile without defining a Physical Phone.  Terminating Script.")
+        print("The template is miconfigured, The ipccDevType is set to EMP, but the")
+        print("Template is not setto configure a EM Profile without defining a Physical")
+        print("Phone.  Terminating Script.")
         print("="*75)
         sys.exit()
     
     if not templatedata["ccxParameters"]["agentLineUsePrimary"] and templatedata["ccxParameters"]["lineAppearanceNum"] == 1:
         print("="*75)
-        print("The template is miconfigured, The CCX Config is set to use a second line appearance,")
-        print("but the Template is set with the lineAppearanceNum to 1 which will remove the primary")
-        print("extension from the Phone.  Terminating Script.")
+        print("The template is miconfigured, The CCX Config is set to use a second line")
+        print("appearance, but the Template is set with the lineAppearanceNum to 1 which")
+        print("will remove the primary extension from the Phone.  Terminating Script.")
         print("="*75)
         sys.exit()
     
     if templatedata["ccxParameters"]["jtapiRMCMUser"] is None or templatedata["ccxParameters"]["jtapiRMCMUser"] == "":
         print("="*75)
-        print("The template is miconfigured, check the RMCM JTapi user configuration.  No App User.")
-        print("Terminating Script.")
+        print("The template is miconfigured, check the RMCM JTapi user configuration.")
+        print(" No App User. Terminating Script.")
         print("="*75)
         sys.exit()
+    
+    #Validate the Phone/device has enough Line Appearances
+    if templatedata["configurations"]["phoneSettings"]:
+        #Get the configured Phone button Template from the script template
+        response = service.getPhoneButtonTemplate(name=templatedata["phone"]["phoneTemplateName"]["_value_1"])
+
+        #Loop through the AXL Results and count the number of line appearances
+        i = 0
+        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
+            if item["feature"] == "Line":
+                i = i + 1
+        
+        #If there is 1 or less lines, terminate script with message
+        if i <= 1:
+            print("="*75)
+            print("The template is miconfigured, The phone's button template doesn't")
+            print("have enough lines to support CCX. Terminating Script.")
+            print("="*75)
+            sys.exit()
+    
+    if templatedata["configurations"]["deviceProfile"]:
+        response = service.getPhoneButtonTemplate(name=templatedata["deviceProfile"]["phoneTemplateName"]["_value_1"])
+
+        i = 0
+        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
+            if item["feature"] == "Line":
+                i = i + 1
+        
+        if i <= 1:
+            print("="*75)
+            print("The template is miconfigured, The phone's button template doesn't")
+            print("have enough lines to support CCX. Terminating Script.")
+            print("="*75)
+            sys.exit()
+    
+    if templatedata["configurations"]["jabberCSF"]:
+        response = service.getPhoneButtonTemplate(name=templatedata["jabberCSF"]["phoneTemplateName"]["_value_1"])
+
+        i = 0
+        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
+            if item["feature"] == "Line":
+                i = i + 1
+        
+        if i <= 1:
+            print("="*75)
+            print("The template is miconfigured, The phone's button template doesn't")
+            print("have enough lines to support CCX. Terminating Script.")
+            print("="*75)
+            sys.exit()
+
 
 #===================Setup Variables===================
 #Setup Variables for the script
