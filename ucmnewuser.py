@@ -24,6 +24,9 @@ from zeep.transports import Transport
 #===================Setup The Script ===================
 
 #===================Setup Zeep Soap Client===================
+print("="*75)
+print("Starting AXL Client.")
+print("="*75)
 #Collect path to the UCM AXL Schema
 #The schema files are downloaded from UCM > Applications > Plugins > Cisco AXL Toolkit
 wsdl = os.path.abspath('axlsqltoolkit/schema/current/AXLAPI.wsdl')
@@ -49,10 +52,50 @@ service = client.create_service(binding, location)
 #===================Read the Template File from Disk===================
 #Read the JSON Template File
 #Template Selection Logic to be added later
+
 filename = "StandardUserTemplate.JSON"
 
 with open(filename, 'r') as file:
     templatedata = json.load(file)
+#===================Read the Template File from Disk===================
+
+#===================Validate the Template File Settings===================
+if templatedata["configurations"]["CCX"]:
+    if templatedata["ccxParameters"]["ipccDevType"] == "CSF" and not templatedata["configurations"]["jabberCSF"]:
+        print("="*75)
+        print("The template is miconfigured, The ipccDevType is set to CSF, but the Template is not set\n")
+        print("to configure a Jabber Windows Profile.  Terminating Script witout configuring CCX")
+        print("="*75)
+        sys.exit()
+    
+    if templatedata["ccxParameters"]["ipccDevType"] == "SEP" and not templatedata["configurations"]["phoneSettings"]:
+        print("="*75)
+        print("The template is miconfigured, The ipccDevType is set to SEP, but the Template is not set")
+        print("to configure a Physical Phone.  Terminating Script witout configuring CCX")
+        print("="*75)
+        sys.exit()
+
+    if templatedata["ccxParameters"]["ipccDevType"] == "EMP" and not templatedata["configurations"]["phoneSettings"]:
+        print("="*75)
+        print("The template is miconfigured, The ipccDevType is set to EMP, but the Template is not set")
+        print("to configure a EM Profile without defining a Physical Phone.  Terminating Script.")
+        print("="*75)
+        sys.exit()
+    
+    if not templatedata["ccxParameters"]["agentLineUsePrimary"] and templatedata["ccxParameters"]["lineAppearanceNum"] == 1:
+        print("="*75)
+        print("The template is miconfigured, The CCX Config is set to use a second line appearance,")
+        print("but the Template is set with the lineAppearanceNum to 1 which will remove the primary")
+        print("extension from the Phone.  Terminating Script.")
+        print("="*75)
+        sys.exit()
+    
+    if templatedata["ccxParameters"]["jtapiRMCMUser"] is None or templatedata["ccxParameters"]["jtapiRMCMUser"] == "":
+        print("="*75)
+        print("The template is miconfigured, check the RMCM JTapi user configuration.  No App User.")
+        print("Terminating Script.")
+        print("="*75)
+        sys.exit()
 
 #===================Setup Variables===================
 #Setup Variables for the script
@@ -91,9 +134,100 @@ if templatedata["configurations"]["CCX"]:
         ccxExtension = input("Agent Extension: ")
         print("="*75)
 
+#===================Setup Variables===================
+
+#===================Define Functions===================
+
+def ConfigurePhone(devType, UID, UFullName, Extn, template):
+    #If we're not configuring a physical phone, we must be configuring Jabber soft phones
+    if not devType == "phone":
+        #Define the Device name so that it is the Template Prefix + the UserID in Caps
+        jabberDevPrefix = template[devType]["name"]
+        jabberDevPrefix = jabberDevPrefix.upper()
+        jabberDeviceName = jabberDevPrefix.strip() + UserID.upper()
+        template[devType]["name"] = jabberDeviceName
+    else:
+        template[devType]["name"] = newUserPhone
+        
+    #Setup the rest of the user specific settings at the device Level
+    template[devType]["description"] = UserFullName + template[devType]["description"]
+    template[devType]["ownerUserName"]["_value_1"] = UserID
+    template[devType]["mobilityUserIdName"]["_value_1"] = UserID
+
+    #If Logged Out Extension is True, we're configuring a generic extension on the Physical Phone for EM
+    #Else we are putting the user's extension directly on the phone
+    if template["configurations"]["loggedOutExtension"] and devType == "phone":
+        template[devType]["lines"]["line"][0]["label"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["display"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["displayAscii"] = template["loggedOutExtension"]["label"]
+        template[devType]["lines"]["line"][0]["e164Mask"] = template["loggedOutExtension"]["e164Mask"]
+        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["loggedOutExtension"]["pattern"]
+        template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = template["loggedOutExtension"]["routePartitionName"]
+        template[devType]["lines"]["line"][0].pop("associatedEndusers")
+
+    else:
+        template[devType]["lines"]["line"][0]["label"] = UFullName + template[devType]["lines"]["line"][0]["label"]
+        template[devType]["lines"]["line"][0]["display"] = UFullName + template[devType]["lines"]["line"][0]["display"]
+        template[devType]["lines"]["line"][0]["displayAscii"] = UFullName + template[devType]["lines"]["line"][0]["displayAscii"]
+        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = Extn
+        template[devType]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UID
+
+    #Find if the phone object exists yet
+    response = service.listPhone(searchCriteria={'name': template[devType]["name"]}, returnedTags={'name': ''})
+    
+    #if the phone object does not exist, use the addPhone API call to add it
+    #Else, remove the read-only elements and use the updatePhone API call to update the existing object
+    if not response['return']:
+        print("="*75)
+        print("The Device Type " + devType + ": " + template[devType]["name"] + " does not exist, we will add it")
+        print("="*75)
+        
+        #Debug Command, Remove in final tool
+        #print(json.dumps(template[devType], indent=4, separators=(',', ': ')))
+
+        response = service.addPhone(phone=template[devType])
+    else:
+        print("="*75)
+        print("The Device Type " + devType + ": " + template[devType]["name"] + " exists, we will be updating it")
+        print("="*75)
+        
+        #Remove Keys that are only supported by the addPhone method
+        template[devType].pop("product")
+        template[devType].pop("protocol")
+        template[devType].pop("class")
+
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updatePhone(**template[devType])
+    
+    #Return the device name when the function is complete
+    return str(template[devType]["name"])
+
+def associateToAppUser(appUserID,phoneToAdd):
+    #Get the current config
+    appUserResponse = service.getAppUser(userid=appUserID)
+        
+    #To add the new Phone to the result we first need to capture the existing phones
+    #or the API will remove what's there and we will have a very bad day.
+    #Create a Dictionary for the phones we need to retain
+    appUserDevices = {
+        "device": []
+    }
+        
+    #Loop through the devices returned from UCM and append them to the new dictionary
+    for device in appUserResponse["return"]["appUser"]["associatedDevices"]["device"]:
+        appUserDevices["device"].append(device)
+        
+    #now that we have the currently configured devices add the new one to the list
+    appUserDevices["device"].append(phoneToAdd)
+        
+    #Update the Application user
+    response = service.updateAppUser(userid=appUserID,associatedDevices=appUserDevices)
+
+#===================Define Functions===================
 
 #===================Configuring the User Account===================
-
 #Add the basic new user info to the template dictionary Variable
 templatedata["user"]["firstName"] = UserFirstName
 templatedata["user"]["displayName"] = UserFullName
@@ -182,73 +316,6 @@ if UserExists:
         templatedata["user"].pop("mailid")
         templatedata["user"].pop("department")
         templatedata["user"].pop("manager")
-
-#===================Define Function used to add Phone objects===================
-def ConfigurePhone(devType, UID, UFullName, Extn, template):
-    #If we're not configuring a physical phone, we must be configuring Jabber soft phones
-    if not devType == "phone":
-        #Define the Device name so that it is the Template Prefix + the UserID in Caps
-        jabberDevPrefix = template[devType]["name"]
-        jabberDevPrefix = jabberDevPrefix.upper()
-        jabberDeviceName = jabberDevPrefix.strip() + UserID.upper()
-        template[devType]["name"] = jabberDeviceName
-    else:
-        template[devType]["name"] = newUserPhone
-        
-    #Setup the rest of the user specific settings at the device Level
-    template[devType]["description"] = UserFullName + template[devType]["description"]
-    template[devType]["ownerUserName"]["_value_1"] = UserID
-    template[devType]["mobilityUserIdName"]["_value_1"] = UserID
-
-    #If Logged Out Extension is True, we're configuring a generic extension on the Physical Phone for EM
-    #Else we are putting the user's extension directly on the phone
-    if template["configurations"]["loggedOutExtension"] and devType == "phone":
-        template[devType]["lines"]["line"][0]["label"] = template["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["display"] = template["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["displayAscii"] = template["loggedOutExtension"]["label"]
-        template[devType]["lines"]["line"][0]["e164Mask"] = template["loggedOutExtension"]["e164Mask"]
-        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = template["loggedOutExtension"]["pattern"]
-        template[devType]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = template["loggedOutExtension"]["routePartitionName"]
-        template[devType]["lines"]["line"][0].pop("associatedEndusers")
-
-    else:
-        template[devType]["lines"]["line"][0]["label"] = UFullName + template[devType]["lines"]["line"][0]["label"]
-        template[devType]["lines"]["line"][0]["display"] = UFullName + template[devType]["lines"]["line"][0]["display"]
-        template[devType]["lines"]["line"][0]["displayAscii"] = UFullName + template[devType]["lines"]["line"][0]["displayAscii"]
-        template[devType]["lines"]["line"][0]["dirn"]["pattern"] = Extn
-        template[devType]["lines"]["line"][0]["associatedEndusers"]["enduser"]["userId"] = UID
-
-    #Find if the phone object exists yet
-    response = service.listPhone(searchCriteria={'name': template[devType]["name"]}, returnedTags={'name': ''})
-    
-    #if the phone object does not exist, use the addPhone API call to add it
-    #Else, remove the read-only elements and use the updatePhone API call to update the existing object
-    if not response['return']:
-        print("="*75)
-        print("The Device Type " + devType + ": " + template[devType]["name"] + " does not exist, we will add it")
-        print("="*75)
-        
-        #Debug Command, Remove in final tool
-        #print(json.dumps(template[devType], indent=4, separators=(',', ': ')))
-
-        response = service.addPhone(phone=template[devType])
-    else:
-        print("="*75)
-        print("The Device Type " + devType + ": " + template[devType]["name"] + " exists, we will be updating it")
-        print("="*75)
-        
-        #Remove Keys that are only supported by the addPhone method
-        template[devType].pop("product")
-        template[devType].pop("protocol")
-        template[devType].pop("class")
-
-        #For some reason, the dictionary needs to use the ** to pass
-        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
-        # generates a type error.  Other AXL Methods seem to work (list and add methods)
-        response = service.updatePhone(**template[devType])
-    
-    #Return the device name when the function is complete
-    return str(template[devType]["name"])
 
 #===================Directory Number===================
 #Amend the Directory Number settings if the extension does not exist
@@ -445,11 +512,16 @@ if templatedata["configurations"]["CCX"]:
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
             response = service.updateLine(**templatedata["ccxline"]) 
         
+        print("="*75)
+        print("Configuring " +  templatedata["ccxline"]["pattern"] + " on the phone.")
+        print("="*75)
         #Create a dictionary for the IPCC Line Appearence that we are going to configure
         templatedata["ccxParameters"]["lineLabelTxt"] = templatedata["ccxParameters"]["lineLabelTxt"] + ccxExtension
         templatedata["ccxParameters"]["lineDisplayName"] = UserFullName + templatedata["ccxParameters"]["lineDisplayName"]
 
-        #Addint the second line appearence will remove the primary, so we have to include it
+        #Adding the second line appearence will remove the primary, so we have to include it n
+        #the update. the Index value for the CCX line tells the API which button appearance to place
+        #the IPCC line.
         #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
         ipccLine = {
                     "name": "",
@@ -465,7 +537,7 @@ if templatedata["configurations"]["CCX"]:
                                 }
                             },
                             {
-                                "index": 2,
+                                "index": templatedata["ccxParameters"]["lineAppearanceNum"],
                                 "label": templatedata["ccxParameters"]["lineLabelTxt"],
                                 "display": templatedata["ccxParameters"]["lineDisplayName"],
                                 "dirn": {
@@ -484,7 +556,7 @@ if templatedata["configurations"]["CCX"]:
                 }
 
         #Adding a line to a device wipes out existing lines so we need to get the current phone settings
-        #and apply the new IPCC line to the phone as line 2
+        #and apply the new IPCC line to the phone.
         #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
         
         #A CCX Agent Line can only be assigned to one device, it cannot be a shared line appearence
@@ -493,21 +565,34 @@ if templatedata["configurations"]["CCX"]:
         ccxDeviceType = ccxDeviceType.upper()
         
         if templatedata["configurations"]["deviceProfile"] and ccxDeviceType == "EMP":
-            #Collect the Device Profile Information
+            #If Device Profile is enabled in the template and the template is configured to use
+            #The EM Profile for the CCX Extension, configure Extension mobility for CCX
             ipccDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
-            
-            #Add the IPCC Line Appearence to the dictionary returned by the AXL call
-            ipccDevice["return"]["deviceProfile"]["lines"]["line"].append
+            ipccLine["name"] = templatedata["deviceProfile"]["name"]
 
-            #Update the Line appearence
-            response = service.updateDeviceProfile(deviceProfile=ipccDevice["deviceProfile"])
+            #Update the IPCC Line Dictionary with the existing Primary number on the device
+            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
+                ipccDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["pattern"]
+            
+            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+                ipccDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+
+            #For some reason, the dictionary needs to use the ** to pass
+            # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+            # generates a type error.  Other AXL Methods seem to work (list and add methods)
+            response = service.updateDeviceProfile(**ipccLine)            
+
+            #Associate the Physical Phone with the RMCM Account
+            associateToAppUser(templatedata["ccxParameters"]["jtapiRMCMUser"],newUserPhone)
         
         elif ccxDeviceType == "CSF":
-            #Collect the Device Profile Information
+            #If Then template is configured for CCX and to use the Jabber Profile for CCX
+            #then configure the CSF Profile
             csfProfileName = ccxDeviceType + UserID.upper()
             ipccDevice = service.getPhone(name=csfProfileName)
             ipccLine["name"] = csfProfileName
 
+            #Update the IPCC Line Dictionary with the existing Primary number on the device
             ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
                 ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
             
@@ -519,11 +604,16 @@ if templatedata["configurations"]["CCX"]:
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
             response = service.updatePhone(**ipccLine)
 
+            #Associate the Jabber Profile with the RMCM Account
+            associateToAppUser(templatedata["ccxParameters"]["jtapiRMCMUser"],csfProfileName)
+            
         else:
-            #Collect the Device Profile Information
+            #If we're not configuring CCX on Jabber or Extension mobilility, then it must be a physical phone
+            #Collect the Physical Profile Information
             ipccDevice = service.getPhone(name=newUserPhone)
             ipccLine["name"] = newUserPhone
 
+            #Update the IPCC Line Dictionary with the existing Primary number on the device
             ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
                 ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
             
@@ -534,11 +624,12 @@ if templatedata["configurations"]["CCX"]:
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
             response = service.updatePhone(**ipccLine)
+
+            #Associate the Physical Phone with the RMCM Account
+            associateToAppUser(templatedata["ccxParameters"]["jtapiRMCMUser"],newUserPhone)
 
         #Associate the IPCC Line with the user
         response = service.updateUser(userid=UserID,ipccExtension=ccxExtension,ipccRoutePartition=templatedata["ccxline"]["routePartitionName"]["_value_1"])
 
-        #Next Associate Device with Application RMCM User
         #Also seems to be a bug with updating existing IPCC line
-        #Also Test IPCC Line on EM Profile
 

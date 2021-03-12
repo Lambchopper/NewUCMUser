@@ -148,6 +148,19 @@ elements will be configured.  The template contains each configuration as a sect
 						CSF = This will assign the CCX Agent Line to the Jabber for Windows CSF Profile.
 							this requires that the cluster supports Jabber Multiline.  Refer to Cisco
 							documentation on Jabber Multiline Support.
+			
+			"lineAppearanceNum":
+				This parameter takes a number value and is used when only used if the agentLineUsePrimary 
+				is set to False.  This parameter defines which button the CCX Agent line should be on.
+				
+				Setting this to two, will set the line on button 2, setting it to 3 places it on button 3.
+				
+				Since the primary line will be another number, setting this to 1, will be ignored and the
+				line will appear on button 2.
+				
+				Please be sure that the Phone template defined in the template for the device you are adding
+				a second line to must have enough lines to support the number of extensions being configured.
+				
 
 Configuration Item Names (E.G. Device Profiles, Mobility Profiles) will add the template contents as
 as a prefix with the user's full name:
