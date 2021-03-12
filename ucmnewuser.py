@@ -523,6 +523,25 @@ if templatedata["configurations"]["SNR"]:
     #Line 17421 and 17436 in AXLSoap.xsd file refernced in the AXL config at the top of this script.
     response = service.addRemoteDestination(templatedata["remoteDestination"])
 
+#===================Configure Speed Dials===================
+if templatedata["configurations"]["speeddials"]:
+    #Create a Dictionary
+    speedDialsDict = {
+        "speeddial": []
+    }
+
+    #Add the items from the Template
+    for item in templatedata["speeddials"]["speeddial"]:
+        speedDialsDict["speeddial"].append(item)
+    
+    #If EM is enabled update that, if not see if the phone is enabled and update that, else don't apply speed dials.
+    if templatedata["configurations"]["deviceProfile"]:
+        response = service.updateDeviceProfile(name=templatedata["deviceProfile"]["name"],speeddials=speedDialsDict)
+    elif templatedata["configurations"]["phoneSettings"]: 
+        response = service.updatePhone(name=newUserPhone,speeddials=speedDialsDict)
+    else:
+        pass
+
 #===================CCX Directory Number===================
 #Configure the user for CCX if the template says to
 if templatedata["configurations"]["CCX"]:

@@ -106,6 +106,14 @@ elements will be configured.  The template contains each configuration as a sect
 	"SNR": [true|false]
 		Enables Mobility on the User account and creates the Remote Destination and Remote Destination Profile
 	"speeddials": [true|false]
+		The script only adds Speed dials to the Phone or the EM Profile.
+		
+		If the EM Profile is enabled this is where the speed dial will be setup, otherwise the will
+		be configured on the phone
+		
+		The index value for each indicates the order it will appear on the phone in top down fashion, where
+		1 is the top most speed dial.
+		
 	"CCX": [true|false]
 		Configures the new user for CCX.  You must configure the ccxLine section of the template if your 
 		environment uses a seperate Agent Extension.  This will be configured as the Second line appearence
@@ -131,10 +139,7 @@ elements will be configured.  The template contains each configuration as a sect
 				The Agent Line cannot be a Shared Line, this is a restriction for CCX. This field is used
 				to set which device will get  the agent line.  For users with a need for mobility, this
 				is typically defined on the Extension Mobility Profile so they can log in anyware.
-				
-				If this isn't set or set properly, the script will assume the Agent line is configured
-				on the physical phone.
-				
+	
 				The Phone template defined in the template for the device you are adding a second line to
 				must have two lines.  If it doesn't manually changing the Button template on the phone will
 				add the new line.
