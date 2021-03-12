@@ -591,10 +591,12 @@ if templatedata["configurations"]["CCX"]:
         templatedata["ccxParameters"]["lineLabelTxt"] = templatedata["ccxParameters"]["lineLabelTxt"] + ccxExtension
         templatedata["ccxParameters"]["lineDisplayName"] = UserFullName + templatedata["ccxParameters"]["lineDisplayName"]
 
-        #Adding the second line appearence will remove the primary, so we have to include it n
+        #Adding the second line appearence will remove the primary, so we have to include it in
         #the update. the Index value for the CCX line tells the API which button appearance to place
         #the IPCC line.
         #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
+        #Define a dictionary that will store the primary line in Index 1 and set the CCX Line
+        #on the button index configured in the template
         ipccLine = {
                     "name": "",
                     "lines": {

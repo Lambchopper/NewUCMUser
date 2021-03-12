@@ -113,6 +113,9 @@ elements will be configured.  The template contains each configuration as a sect
 		
 		The index value for each indicates the order it will appear on the phone in top down fashion, where
 		1 is the top most speed dial.
+	
+	"secondLine": [true|false]
+		This will be used to add an additional, non CCX line appearance to the phone, EM Profile and/or Jabber
 		
 	"CCX": [true|false]
 		Configures the new user for CCX.  You must configure the ccxLine section of the template if your 
