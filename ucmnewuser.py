@@ -846,7 +846,7 @@ if templatedata["configurations"]["secondLine"]:
                             }
                         },
                         {
-                            "index": templatedata["secondLinePatameters"]["lineAppearanceNum"],
+                            "index": templatedata["secondLineParameters"]["lineAppearanceNum"],
                             "label": templatedata["secondLine"]["description"],
                             "display": templatedata["secondLine"]["alertingName"],
                             "dirn": {
@@ -856,7 +856,7 @@ if templatedata["configurations"]["secondLine"]:
                                 }
                             },
                             "displayAscii": templatedata["secondLine"]["asciiAlertingName"],
-                            "e164Mask": templatedata["secondLinePatameters"]["e164Mask"],
+                            "e164Mask": templatedata["secondLineParameters"]["e164Mask"],
                         }
                     ]
                 }
