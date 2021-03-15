@@ -82,34 +82,33 @@ if templatedata["configurations"]["phoneSettings"]:
 
     #Loop through the AXL Results and count the number of line appearances and speed dials the UCM Button
     #template is configured to place on the phone
-    i = 0
-    s = 0
+    phoneBtnTemplateNumLines = 0
+    phoneBtnTemplateNumSpdDials = 0
     for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
         if item["feature"] == "Line":
-            i = i + 1
+            phoneBtnTemplateNumLines = phoneBtnTemplateNumLines + 1
         if item["feature"] == "Speed Dial":
-            s = s + 1
-    
-    phoneBtnTemplateNumLines = i
-    phoneBtnTemplateNumSpdDials = s
+            phoneBtnTemplateNumSpdDials = phoneBtnTemplateNumSpdDials + 1
 
     #If the JSON template is configuring speed dials and the configured button template doesn't have
     #enough SD Buttons, we can't go on.
-    if templatedata["configurations"]["speeddials"] and phoneBtnTemplateNumSpdDials > requiredSpeedDials:
+    if templatedata["configurations"]["speeddials"] and phoneBtnTemplateNumSpdDials < requiredSpeedDials:
         print("="*75)
-        print("The template is miconfigured, there are not enough speed dials")
-        print("in the phone's button template for the number of SDs defined in the template.")
+        print("The JSON template is miconfigured, there are not enough speed dials")
+        print("in the phone's button template for the number of SDs defined in the JSON template.")
+        print("The JSON Template has " + str(requiredSpeedDials) + " Speed Dials to configure.")
+        print("The Phone button template only has " + str(phoneBtnTemplateNumSpdDials) + " configured.")
         print("Terminating Script.")
         print("="*75)
         sys.exit()
 
     #If 2nd Line, CCX enabled and Use Primary is disabled we will need 3 line appearances.
     if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        not templatedata["ccxParameters"]["agentLineUsePrimary"]:
 
         if phoneBtnTemplateNumLines < 3:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
@@ -117,23 +116,23 @@ if templatedata["configurations"]["phoneSettings"]:
 
     #If 2nd Line, CCX enabled and Use Primary is enabled we will need 2 line appearances
     if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        templatedata["ccxParameters"]["agentLineUsePrimary"]:
         
         if phoneBtnTemplateNumLines < 2:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
             sys.exit()
     
     #If 2nd Line is disabled, CCX enabled and Use Primary is disabled we will need 2 line appearances
-    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+    if not templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["ccxParameters"]["agentLineUsePrimary"]:
         
         if phoneBtnTemplateNumLines < 2:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
@@ -142,34 +141,33 @@ if templatedata["configurations"]["phoneSettings"]:
 if templatedata["configurations"]["deviceProfile"]:
     response = service.getPhoneButtonTemplate(name=templatedata["deviceProfile"]["phoneTemplateName"]["_value_1"])
 
-    i = 0
-    s = 0
+    deviceProfileBtnTemplateNumLines = 0
+    deviceProfileBtnTemplateNumSpdDials = 0
     for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
         if item["feature"] == "Line":
-            i = i + 1
+            deviceProfileBtnTemplateNumLines = deviceProfileBtnTemplateNumLines + 1
         if item["feature"] == "Speed Dial":
-            s = s + 1
-    
-    deviceProfileBtnTemplateNumLines = i
-    deviceProfileBtnTemplateNumSpdDials = s
+            deviceProfileBtnTemplateNumSpdDials = deviceProfileBtnTemplateNumSpdDials + 1
 
     #If the JSON template is configuring speed dials and the configured button template doesn't have
     #enough SD Buttons, we can't go on.
-    if templatedata["configurations"]["speeddials"] and deviceProfileBtnTemplateNumSpdDials > requiredSpeedDials:
+    if templatedata["configurations"]["speeddials"] and deviceProfileBtnTemplateNumSpdDials < requiredSpeedDials:
         print("="*75)
         print("The template is miconfigured, there are not enough speed dials")
-        print("in the phone's button template for the number of SDs defined in the template.")
+        print("in the EM Profiles's button template for the number of SDs defined in the JSON template.")
+        print("The JSON Template has " + str(requiredSpeedDials) + " Speed Dials to configure.")
+        print("The Phone button template only has " + str(deviceProfileBtnTemplateNumSpdDials) + " configured.")
         print("Terminating Script.")
         print("="*75)
         sys.exit()
 
     #If 2nd Line, CCX enabled and Use Primary is disabled we will need 3 line appearances
     if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        not templatedata["ccxParameters"]["agentLineUsePrimary"]:
 
         if deviceProfileBtnTemplateNumLines < 3:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
@@ -177,34 +175,43 @@ if templatedata["configurations"]["deviceProfile"]:
 
     #If 2nd Line, CCX enabled and Use Primary is enabled we will need 2 line appearances
     if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        not templatedata["ccxParameters"]["agentLineUsePrimary"]:
         
         if deviceProfileBtnTemplateNumLines < 2:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
             sys.exit()
     
     #If 2nd Line is disabled, CCX enabled and Use Primary is disabled we will need 2 line appearances
-    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
-        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+    if not templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["ccxParameters"]["agentLineUsePrimary"]:
         
         if deviceProfileBtnTemplateNumLines < 2:
             print("="*75)
-            print("The template is miconfigured, there are not enough line appearances")
+            print("The JSON template is miconfigured, there are not enough line appearances")
             print("in the phone's button template for the features defined.")
             print("Terminating Script.")
             print("="*75)
             sys.exit()
 
 
+#if the second line index is set to 1, it overrides the primary extension
+if templatedata["configurations"]["secondLine"] and templatedata["secondLineParameters"]["lineAppearanceNum"] == 1:
+    print("="*75)
+    print("The JSON template is miconfigured, the LineAppearanceNum for the the second line")
+    print("is configured as 1, this will conflict with the primary number it must be 2 or higher.")
+    print("Terminating Script.")
+    print("="*75)
+    sys.exit()
+
 if templatedata["configurations"]["CCX"]:
     #Validate the CCX Parameters Section
     if templatedata["ccxParameters"]["ipccDevType"] == "CSF" and not templatedata["configurations"]["jabberCSF"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to CSF, but the")
+        print("The JSON template is miconfigured, The ipccDevType is set to CSF, but the")
         print("Template is not set to configure a Jabber Windows Profile.")
         print("Terminating Script.")
         print("="*75)
@@ -212,14 +219,14 @@ if templatedata["configurations"]["CCX"]:
     
     if templatedata["ccxParameters"]["ipccDevType"] == "SEP" and not templatedata["configurations"]["phoneSettings"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to SEP, but the ")
+        print("The JSON template is miconfigured, The ipccDevType is set to SEP, but the ")
         print("template is not set to configure a Physical Phone.  Terminating Script.")
         print("="*75)
         sys.exit()
 
     if templatedata["ccxParameters"]["ipccDevType"] == "EMP" and not templatedata["configurations"]["phoneSettings"]:
         print("="*75)
-        print("The template is miconfigured, The ipccDevType is set to EMP, but the")
+        print("The JSON template is miconfigured, The ipccDevType is set to EMP, but the")
         print("Template is not setto configure a EM Profile without defining a Physical")
         print("Phone.  Terminating Script.")
         print("="*75)
@@ -227,7 +234,7 @@ if templatedata["configurations"]["CCX"]:
     
     if not templatedata["ccxParameters"]["agentLineUsePrimary"] and templatedata["ccxParameters"]["lineAppearanceNum"] == 1:
         print("="*75)
-        print("The template is miconfigured, The CCX Config is set to use a second line")
+        print("The JSON template is miconfigured, The CCX Config is set to use a second line")
         print("appearance, but the Template is set with the lineAppearanceNum to 1 which")
         print("will remove the primary extension from the Phone.  Terminating Script.")
         print("="*75)
@@ -235,11 +242,33 @@ if templatedata["configurations"]["CCX"]:
     
     if templatedata["ccxParameters"]["jtapiRMCMUser"] is None or templatedata["ccxParameters"]["jtapiRMCMUser"] == "":
         print("="*75)
-        print("The template is miconfigured, check the RMCM JTapi user configuration.")
-        print(" No App User. Terminating Script.")
+        print("The JSON template is miconfigured, check the RMCM JTapi user configuration.")
+        print("No App User. Terminating Script.")
         print("="*75)
         sys.exit()
     
+    try:
+        response = service.getAppUser(userid=templatedata["ccxParameters"]["jtapiRMCMUser"])
+    except:
+        print("="*75)
+        print("The JSON template is miconfigured, check the RMCM JTapi user configuration.")
+        print("App User does not exist. Terminating Script.")
+        print("="*75)
+        sys.exit()
+    
+    #CCX enabled and Use Primary is disabled we need to confirm that the line index do not
+    #not conflict for the CCX Line and the Second line
+    if not templatedata["ccxParameters"]["agentLineUsePrimary"] and templatedata["configurations"]["secondLine"]:
+    
+            if templatedata["ccxParameters"]["lineAppearanceNum"] == templatedata["secondLineParameters"]["lineAppearanceNum"]:
+                print("="*75)
+                print("The JSON template is miconfigured, the LineAppearanceNum for the CCX")
+                print("and second line appearance are conflicting, they cannot match.")
+                print("Terminating Script.")
+                print("="*75)
+                sys.exit()
+
+
 
 #===================Setup Variables===================
 #Setup Variables for the script
