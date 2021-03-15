@@ -130,7 +130,24 @@ elements will be configured.  The template contains each configuration as a sect
 	
 	"secondLine": [true|false]
 		This will be used to add an additional, non CCX line appearance to the phone, EM Profile and/or Jabber
+		Can be used to add a Shared Line Appearance or a Roll Over Extension (E.G. Line 2)
 		
+		You must also configure the secondLinePatameters section:
+			"lineAppearanceNum":
+				This parameter takes a number value and is used when only used if the agentLineUsePrimary 
+				is set to False.  This parameter defines which button the 2nd line should be on.
+				
+				Setting this to two, will set the line on button 2, setting it to 3 places it on button 3.
+				
+				Since the primary line will be another number, setting this to 1, will be ignored and the
+				line will appear on button 2.
+				
+				Please be sure that the Phone template defined in the template for the device you are adding
+				a second line to must have enough lines to support the number of extensions being configured.
+
+			"e164Mask":
+				The External Phone Number Mask for the 2nd Line Appearence
+				
 	"CCX": [true|false]
 		Configures the new user for CCX.  You must configure the ccxLine section of the template if your 
 		environment uses a seperate Agent Extension.  This will be configured as the Second line appearence

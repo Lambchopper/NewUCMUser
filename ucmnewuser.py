@@ -53,13 +53,153 @@ service = client.create_service(binding, location)
 #Read the JSON Template File
 #Template Selection Logic to be added later
 
-filename = "StandardUserTemplate.JSON"
+try:
+    filename = "StandardUserTemplate.JSON"
 
-with open(filename, 'r') as file:
-    templatedata = json.load(file)
+    with open(filename, 'r') as file:
+        templatedata = json.load(file)
+except:
+    print("="*75)
+    print("Unable to open the Template file, this is typcally due to a syntax error.")
+    print("Check the JSON file and try again.  Terminating Script.")
+    print("="*75)
+    sys.exit()
+
 #===================Read the Template File from Disk===================
 
 #===================Validate the Template File Settings===================
+
+#Validate the Phone/devices have enough Line Appearances and speed dials in the button templates
+#Count the number of Speed dials to be configured in the template if we are configuring them
+if templatedata["configurations"]["speeddials"]:
+    requiredSpeedDials = 0
+    for speeddial in templatedata["speeddials"]["speeddial"]:
+        requiredSpeedDials = requiredSpeedDials + 1
+
+if templatedata["configurations"]["phoneSettings"]:
+    #Get the configured Phone button Template from the script template
+    response = service.getPhoneButtonTemplate(name=templatedata["phone"]["phoneTemplateName"]["_value_1"])
+
+    #Loop through the AXL Results and count the number of line appearances and speed dials the UCM Button
+    #template is configured to place on the phone
+    i = 0
+    s = 0
+    for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
+        if item["feature"] == "Line":
+            i = i + 1
+        if item["feature"] == "Speed Dial":
+            s = s + 1
+    
+    phoneBtnTemplateNumLines = i
+    phoneBtnTemplateNumSpdDials = s
+
+    #If the JSON template is configuring speed dials and the configured button template doesn't have
+    #enough SD Buttons, we can't go on.
+    if templatedata["configurations"]["speeddials"] and phoneBtnTemplateNumSpdDials > requiredSpeedDials:
+        print("="*75)
+        print("The template is miconfigured, there are not enough speed dials")
+        print("in the phone's button template for the number of SDs defined in the template.")
+        print("Terminating Script.")
+        print("="*75)
+        sys.exit()
+
+    #If 2nd Line, CCX enabled and Use Primary is disabled we will need 3 line appearances.
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+
+        if phoneBtnTemplateNumLines < 3:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+
+    #If 2nd Line, CCX enabled and Use Primary is enabled we will need 2 line appearances
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        
+        if phoneBtnTemplateNumLines < 2:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+    
+    #If 2nd Line is disabled, CCX enabled and Use Primary is disabled we will need 2 line appearances
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        
+        if phoneBtnTemplateNumLines < 2:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+
+if templatedata["configurations"]["deviceProfile"]:
+    response = service.getPhoneButtonTemplate(name=templatedata["deviceProfile"]["phoneTemplateName"]["_value_1"])
+
+    i = 0
+    s = 0
+    for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
+        if item["feature"] == "Line":
+            i = i + 1
+        if item["feature"] == "Speed Dial":
+            s = s + 1
+    
+    deviceProfileBtnTemplateNumLines = i
+    deviceProfileBtnTemplateNumSpdDials = s
+
+    #If the JSON template is configuring speed dials and the configured button template doesn't have
+    #enough SD Buttons, we can't go on.
+    if templatedata["configurations"]["speeddials"] and deviceProfileBtnTemplateNumSpdDials > requiredSpeedDials:
+        print("="*75)
+        print("The template is miconfigured, there are not enough speed dials")
+        print("in the phone's button template for the number of SDs defined in the template.")
+        print("Terminating Script.")
+        print("="*75)
+        sys.exit()
+
+    #If 2nd Line, CCX enabled and Use Primary is disabled we will need 3 line appearances
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+
+        if deviceProfileBtnTemplateNumLines < 3:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+
+    #If 2nd Line, CCX enabled and Use Primary is enabled we will need 2 line appearances
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        
+        if deviceProfileBtnTemplateNumLines < 2:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+    
+    #If 2nd Line is disabled, CCX enabled and Use Primary is disabled we will need 2 line appearances
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["CCX"] and \
+        not templatedata["configurations"]["ccxParameters"]["agentLineUsePrimary"]:
+        
+        if deviceProfileBtnTemplateNumLines < 2:
+            print("="*75)
+            print("The template is miconfigured, there are not enough line appearances")
+            print("in the phone's button template for the features defined.")
+            print("Terminating Script.")
+            print("="*75)
+            sys.exit()
+
+
 if templatedata["configurations"]["CCX"]:
     #Validate the CCX Parameters Section
     if templatedata["ccxParameters"]["ipccDevType"] == "CSF" and not templatedata["configurations"]["jabberCSF"]:
@@ -100,55 +240,6 @@ if templatedata["configurations"]["CCX"]:
         print("="*75)
         sys.exit()
     
-    #Validate the Phone/device has enough Line Appearances
-    if templatedata["configurations"]["phoneSettings"]:
-        #Get the configured Phone button Template from the script template
-        response = service.getPhoneButtonTemplate(name=templatedata["phone"]["phoneTemplateName"]["_value_1"])
-
-        #Loop through the AXL Results and count the number of line appearances
-        i = 0
-        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
-            if item["feature"] == "Line":
-                i = i + 1
-        
-        #If there is 1 or less lines, terminate script with message
-        if i <= 1:
-            print("="*75)
-            print("The template is miconfigured, The phone's button template doesn't")
-            print("have enough lines to support CCX. Terminating Script.")
-            print("="*75)
-            sys.exit()
-    
-    if templatedata["configurations"]["deviceProfile"]:
-        response = service.getPhoneButtonTemplate(name=templatedata["deviceProfile"]["phoneTemplateName"]["_value_1"])
-
-        i = 0
-        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
-            if item["feature"] == "Line":
-                i = i + 1
-        
-        if i <= 1:
-            print("="*75)
-            print("The template is miconfigured, The phone's button template doesn't")
-            print("have enough lines to support CCX. Terminating Script.")
-            print("="*75)
-            sys.exit()
-    
-    if templatedata["configurations"]["jabberCSF"]:
-        response = service.getPhoneButtonTemplate(name=templatedata["jabberCSF"]["phoneTemplateName"]["_value_1"])
-
-        i = 0
-        for item in response["return"]["phoneButtonTemplate"]["buttons"]["button"]:
-            if item["feature"] == "Line":
-                i = i + 1
-        
-        if i <= 1:
-            print("="*75)
-            print("The template is miconfigured, The phone's button template doesn't")
-            print("have enough lines to support CCX. Terminating Script.")
-            print("="*75)
-            sys.exit()
-
 
 #===================Setup Variables===================
 #Setup Variables for the script
@@ -534,13 +625,139 @@ if templatedata["configurations"]["speeddials"]:
     for item in templatedata["speeddials"]["speeddial"]:
         speedDialsDict["speeddial"].append(item)
     
-    #If EM is enabled update that, if not see if the phone is enabled and update that, else don't apply speed dials.
+    #If EM is enabled update that, if not see if the phone is enabled without using a generic logged out configuration
+    #and update that, else don't apply speed dials.
     if templatedata["configurations"]["deviceProfile"]:
         response = service.updateDeviceProfile(name=templatedata["deviceProfile"]["name"],speeddials=speedDialsDict)
-    elif templatedata["configurations"]["phoneSettings"]: 
+
+    elif templatedata["configurations"]["phoneSettings"] and not templatedata["configurations"]["loggedOutExtension"]: 
         response = service.updatePhone(name=newUserPhone,speeddials=speedDialsDict)
+
     else:
         pass
+#===================Configure Secondary Line Appearance===================
+if templatedata["configurations"]["secondLine"]:
+    secondExtension = templatedata["secondLine"]["pattern"]
+    
+    #Check UCM to see if Extension Exists already
+    response = service.listLine(searchCriteria={'pattern': secondExtension}, returnedTags={'pattern': ''})
+        
+    #If it doesn't exist, add it, otherwise update it.
+    if not response['return']:
+        print("="*75)
+        print("The Directory Number " +  secondExtension + " does not exist, we will add it")
+        print("="*75)
+        response = service.addLine(line=templatedata["secondLine"])
+    
+    else:
+        print("="*75)
+        print("The Directory Number " +  secondExtension + " exists, we will be updating it")
+        print("="*75)
+    
+        #Remove Dictionary Key used to add a line, but is not used in the Update Method
+        templatedata["secondLine"].pop("usage")
+    
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updateLine(**templatedata["secondLine"]) 
+
+    #Create a dictionary for the 2nd Line Appearence that we are going to configure
+    #Adding the second line appearence will remove the primary, so we have to include it in
+    #the update. the Index value for the 2nd line tells the API which button appearance to place
+    #the 2nd Line line.
+    #Define a dictionary that will store the primary line in Index 1 and set the 2nd Line
+    #on the button index configured in the template
+    secondLineDict = {
+                "name": "",
+                "lines": {
+                    "line": [
+                        {
+                            "index": 1,
+                            "dirn": {
+                                "pattern": "",
+                                "routePartitionName": {
+                                    "_value_1": ""
+                                }
+                            }
+                        },
+                        {
+                            "index": templatedata["secondLinePatameters"]["lineAppearanceNum"],
+                            "label": templatedata["secondLine"]["description"],
+                            "display": templatedata["secondLine"]["alertingName"],
+                            "dirn": {
+                                "pattern": templatedata["secondLine"]["pattern"],
+                                "routePartitionName": {
+                                    "_value_1": templatedata["secondLine"]["routePartitionName"]["_value_1"]
+                                }
+                            },
+                            "displayAscii": templatedata["secondLine"]["asciiAlertingName"],
+                            "e164Mask": templatedata["secondLinePatameters"]["e164Mask"],
+                        }
+                    ]
+                }
+            }
+
+    #Adding a line to a device wipes out existing lines so we need to get the current phone settings
+    #and apply the 2nd line to the phone.
+    #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
+
+    #We will add the 2nd line appearance to every device we add the Primary number to except Jabber Mobile
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["deviceProfile"]:
+        #If Device Profile is enabled in the template and the template is configured for a 2nd line
+        secondLineDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
+        secondLineDict["name"] = templatedata["deviceProfile"]["name"]
+
+        #Update the IPCC Line Dictionary with the existing Primary number on the device
+        secondLineDict["lines"]["line"][0]["dirn"]["pattern"] = \
+            secondLineDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["pattern"]
+        
+        secondLineDict["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+            secondLineDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updateDeviceProfile(**secondLineDict)            
+    
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["jabberCSF"]:
+        #If Then template is configured for a 2nd line and Jabber Windows so add the second line to Jabber
+        #then configure the CSF Profile
+        csfProfileName = templatedata["jabberCSF"]["name"]
+        csfProfileName = csfProfileName.upper()
+        secondLineDevice = service.getPhone(name=csfProfileName)
+        secondLineDict["name"] = csfProfileName
+
+        #Update the IPCC Line Dictionary with the existing Primary number on the device
+        secondLineDict["lines"]["line"][0]["dirn"]["pattern"] = \
+            secondLineDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
+        
+        secondLineDict["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+            secondLineDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+        
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updatePhone(**secondLineDict)
+        
+    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["phoneSettings"] and \
+		not templatedata["configurations"]["loggedOutExtension"]:
+        #If we're configuring primary line on Phone, add 2nd line too.
+        #Collect the Physical Profile Information
+        secondLineDevice = service.getPhone(name=newUserPhone)
+        secondLineDict["name"] = newUserPhone
+
+        #Update the IPCC Line Dictionary with the existing Primary number on the device
+        secondLineDict["lines"]["line"][0]["dirn"]["pattern"] = \
+            secondLineDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
+        
+        secondLineDict["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
+            secondLineDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+        
+        #For some reason, the dictionary needs to use the ** to pass
+        # the elements to the AXL Update Method.  Referencing phone=template["phone"]
+        # generates a type error.  Other AXL Methods seem to work (list and add methods)
+        response = service.updatePhone(**secondLineDict)
 
 #===================CCX Directory Number===================
 #Configure the user for CCX if the template says to
@@ -577,7 +794,7 @@ if templatedata["configurations"]["CCX"]:
             print("="*75)
     
             #Remove Dictionary Key used to add a line, but is not used in the Update Method
-            templatedata["line"].pop("usage")
+            templatedata["ccxline"].pop("usage")
     
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
