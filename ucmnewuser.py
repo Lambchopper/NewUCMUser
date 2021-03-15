@@ -11,6 +11,7 @@ import sys
 
 #Import Stuff for data processing
 import json
+import re
 
 #Import Stuff for AXL API Interactions
 import os.path as abspath
@@ -53,8 +54,61 @@ service = client.create_service(binding, location)
 #Read the JSON Template File
 #Template Selection Logic to be added later
 
+#Get a list of all the files in the scripts working directory
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+
+dirList = os.listdir(scriptPath)
+
+templateFiles = []
+
+for filename in dirList:
+    if filename.upper().endswith(".JSON"):
+        templateFiles.append(filename)
+
+#Display he available templates for the user and have them choose one
+print("="*75)
+print("Please pick a template file.")
+print("="*75)
+i = 1
+for file in templateFiles:
+    print(str(i) + ":  " + file)
+    i = i + 1
+print("="*75)
+templateSelection = input("Select Template (Num): ")
+print("="*75)
+
+#Validate the user input
+for checkInput in range(1, 4):
+    if checkInput == 3:
+        print("Incorrect Input")
+        print("Failed too many times, terminating script")
+        sys.exit()
+
+    try:
+        templateSelection = int(templateSelection)
+    except:
+        print("Invalid Input, you must enter a number that matches your selection")
+        templateSelection = input("Select Template (Num): ")
+        print("="*75)
+        continue
+
+    if templateSelection > 0 or templateSelection <= i:
+        print(str(templateFiles[templateSelection-1]) + " has been selected.")
+        print("Is this correct?")
+        print("="*75)
+        confirmInput = input("(Y or N):")
+        confirmInput = confirmInput.upper()
+        if confirmInput == "Y":
+            break
+        print("="*75)
+        print("You did not confirm selection, terminating script")
+        sys.exit()
+    else:
+        templateSelection = input("Select Template (Num): ")
+        print("="*75)
+
 try:
-    filename = "StandardUserTemplate.JSON"
+    filename = str(templateFiles[templateSelection-1])
 
     with open(filename, 'r') as file:
         templatedata = json.load(file)
@@ -68,9 +122,12 @@ except:
 #===================Read the Template File from Disk===================
 
 #===================Validate the Template File Settings===================
-
 #Validate the Phone/devices have enough Line Appearances and speed dials in the button templates
 #Count the number of Speed dials to be configured in the template if we are configuring them
+print("="*75)
+print("Validating " + filename + " to confirm configuration.")
+print("="*75)
+
 if templatedata["configurations"]["speeddials"]:
     requiredSpeedDials = 0
     for speeddial in templatedata["speeddials"]["speeddial"]:
@@ -277,12 +334,69 @@ listConfiguredDevices = []
 
 #Collect new user specifics
 #This will be replaced by logic to prompt for this data
-UserFirstName = "John"
-UserLastName = "Dough"
-UserID = "jdough"
-Extension = "5775"
-newUserPhone = "SEP111122223333"
-EmailAddress = "jdough@convergedtechgroup.com"
+print("="*75)
+print("Please enter the user's first name")
+print("="*75)
+UserFirstName = input("First Name: ")
+
+print("="*75)
+print("Please enter the user's last name")
+print("="*75)
+UserLastName = input("Last Name: ")
+
+print("="*75)
+print("Please enter the UserID")
+print("This will need to match the User's AD ID or will be created")
+print("as a Local Enabled UCM user account.")
+print("="*75)
+UserID = input("UserID: ")
+
+print("="*75)
+print("Please enter the User's Primary Extension")
+print("This will need to match the User's IP Phone Extension in AD if LDAP Synced")
+print("="*75)
+Extension = input("Extension: ")
+
+#Jabber Softphone Only templates don't require a physical Phone.  However we do need this
+#for assigning a Physical Phone or if we are doing CCX with a Device Profile since the
+#physical Phone needs to be assigned to the RMCM Account
+if templatedata["configurations"]["phoneSettings"]:
+    print("="*75)
+    print("Please enter a Phone to assign to the user")
+    print("This should be entered as SEPxxxxxxxxxxxx where the Xs match the")
+    print("phone's MAC address.")
+    print("="*75)
+    newUserPhone = input("Phone: ")
+elif templatedata["configurations"]["CCX"] and templatedata["ccxParameters"]["ipccDevType"] == "EMP":
+    print("="*75)
+    print("Please enter a Phone to assign to the user")
+    print("This should be entered as SEPxxxxxxxxxxxx where the Xs match the")
+    print("phone's MAC address.")
+    print("="*75)
+    newUserPhone = input("Phone: ")
+    print("="*75)
+
+for checkInput in range(1, 4):
+    if checkInput == 3:
+          print("Incorrect Input")
+          print("Failed too many times, terminating script")
+          exit()
+    
+    if re.search("SEP[0-9A-F]{2}([-:]?)[0-9A-F]{2}(\\1[0-9A-F]{2}){4}$", newUserPhone.upper()):
+        newUserPhone = newUserPhone.upper()
+        break
+    else:
+        print("Phone entered is not in the format SEPxxxxxxxxxxxx where the Xs match the")
+        print("phone's MAC address. Please Try again.")
+        print("="*75)
+        newUserPhone = input("Phone: ")
+        print("="*75)
+
+print("="*75)
+print("Please enter the User's Email Address")
+print("This be used for the DirectoryUI and MainID Fields")
+print("="*75)
+EmailAddress = input("Email Address: ")
 
 UserFullName = UserFirstName + " " + UserLastName
 
@@ -306,6 +420,27 @@ if templatedata["configurations"]["CCX"]:
         print("="*75)
         ccxExtension = input("Agent Extension: ")
         print("="*75)
+
+print("="*75)
+print("Is this correct?")
+print('{:17}{:30}'.format("First Name: ", UserFirstName))
+print('{:17}{:30}'.format("Last Name: ", UserLastName))
+print('{:17}{:30}'.format("Full Name: ", UserFullName))
+print('{:17}{:30}'.format("User ID: ", UserID))
+print('{:17}{:30}'.format("Extension: ", Extension))
+print('{:17}{:30}'.format("New Phone: ", newUserPhone))
+print('{:17}{:30}'.format("Email Address: ", EmailAddress))
+if templatedata["configurations"]["SNR"]:
+    print('{:17}{:30}'.format("Cell Number: ", mobileNum))
+if templatedata["configurations"]["CCX"]:
+    print('{:17}{:30}'.format("Agent Extension: ", ccxExtension))
+print("="*75)
+print("Is this correct?")
+print("="*75)
+confirmInput = input("(Y or N):")
+confirmInput = confirmInput.upper()
+if not confirmInput == "Y":
+    sys.exit()
 
 #===================Setup Variables===================
 
