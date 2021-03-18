@@ -49,10 +49,10 @@ print("Collect UCM Object")
 print("="*50)
 
 #Change Object Type for personal Reference
-ucmObjectType = "getButtonTemplate"
+#ucmObjectType = "getButtonTemplate"
 #Set ucmObject Variable for your needs
 #ucmObject = '{4826E8A0-2143-0653-7EBF-1ECF441E3097}'
-ucmObject = 'Standard 8865 SIP CTG NOC User'
+ucmObject = 'EM-John Dough'
 
 #uncomment as neessary (List Line to get UUID, Get Line to dump full DN results)
 #response = service.getLine(uuid=ucmObject)
@@ -60,15 +60,16 @@ ucmObject = 'Standard 8865 SIP CTG NOC User'
 #response = service.getPhone(name=ucmObject)
 #response = service.listRemoteDestination(name=ucmObject)
 #response = service.getUser(userid=ucmObject)
-response = service.getPhoneButtonTemplate(name=ucmObject)
+#response = service.getPhoneButtonTemplate(name=ucmObject)
+#response = service.getDestinationProfile(name=ucmObject)
+response = service.getDeviceProfile(name=ucmObject)
+print("="*75)
+print("Sample Output")
+print("="*75)
 
-print("="*50)
-print("Convert From Zeep Object to Dictionary")
-print("="*50)
-
-#Silly Cisco, you should have consistant output
-#The vendor config from phone devices needs special handling
-#We don't typically set these values during a MACD, so we will ignore them
+##Silly Cisco, you should have consistant output
+##The vendor config from phone devices needs special handling
+##We don't typically set these values during a MACD, so we will ignore them
 try:
     del response["return"]["phone"]["vendorConfig"]
 except:

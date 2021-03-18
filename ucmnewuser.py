@@ -559,6 +559,8 @@ try:
     response = service.getUser(userid=UserID)
     UserExists = True
 except:
+    print("")
+    print("")
     print("="*75)
     print("User Does Not Exist.")
     print("="*75)
@@ -867,7 +869,7 @@ if templatedata["configurations"]["secondLine"]:
     #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
 
     #We will add the 2nd line appearance to every device we add the Primary number to except Jabber Mobile
-    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["deviceProfile"]:
+    if templatedata["configurations"]["deviceProfile"]:
         #If Device Profile is enabled in the template and the template is configured for a 2nd line
         secondLineDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
         secondLineDict["name"] = templatedata["deviceProfile"]["name"]
@@ -879,12 +881,11 @@ if templatedata["configurations"]["secondLine"]:
         secondLineDict["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
             secondLineDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
 
-        #For some reason, the dictionary needs to use the ** to pass
         # the elements to the AXL Update Method.  Referencing phone=template["phone"]
         # generates a type error.  Other AXL Methods seem to work (list and add methods)
-        response = service.updateDeviceProfile(**secondLineDict)            
-    
-    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["jabberCSF"]:
+        response = service.updateDeviceProfile(**secondLineDict)   
+
+    if templatedata["configurations"]["jabberCSF"]:
         #If Then template is configured for a 2nd line and Jabber Windows so add the second line to Jabber
         #then configure the CSF Profile
         csfProfileName = templatedata["jabberCSF"]["name"]
@@ -904,8 +905,7 @@ if templatedata["configurations"]["secondLine"]:
         # generates a type error.  Other AXL Methods seem to work (list and add methods)
         response = service.updatePhone(**secondLineDict)
         
-    if templatedata["configurations"]["secondLine"] and templatedata["configurations"]["phoneSettings"] and \
-		not templatedata["configurations"]["loggedOutExtension"]:
+    if templatedata["configurations"]["phoneSettings"] and not templatedata["configurations"]["loggedOutExtension"]:
         #If we're configuring primary line on Phone, add 2nd line too.
         #Collect the Physical Profile Information
         secondLineDevice = service.getPhone(name=newUserPhone)
@@ -926,7 +926,7 @@ if templatedata["configurations"]["secondLine"]:
 #===================CCX Directory Number===================
 #Configure the user for CCX if the template says to
 if templatedata["configurations"]["CCX"]:
-
+    #---------------Setup the CCX Directory Number---------------
     if templatedata["ccxParameters"]["agentLineUsePrimary"]:
         #Configure the extension we added as the primary line to also function as the Agent Line
         #We will assume that the alerting and display names are all set when the primary line is defined above
@@ -937,6 +937,7 @@ if templatedata["configurations"]["CCX"]:
             ipccRoutePartition=templatedata["line"]["routePartitionName"]["_value_1"])
 
     else:
+        #Collect the CCX Line config from the template
         templatedata["ccxline"]["pattern"] = ccxExtension
         templatedata["ccxline"]["description"] = UserFullName + templatedata["ccxline"]["description"]
         templatedata["ccxline"]["alertingName"] = UserFullName + templatedata["ccxline"]["alertingName"]
@@ -964,56 +965,28 @@ if templatedata["configurations"]["CCX"]:
             # the elements to the AXL Update Method.  Referencing pattern=templatedata["line"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
             response = service.updateLine(**templatedata["ccxline"]) 
-        
+
+        #---------------Setup the CCX Line Appearance on the phone---------------        
         print("="*75)
         print("Configuring " +  templatedata["ccxline"]["pattern"] + " on the phone.")
         print("="*75)
-        #Create a dictionary for the IPCC Line Appearence that we are going to configure
+
+        #collect the template config for the IPCC Line Appearence that we are going to configure
         templatedata["ccxParameters"]["lineLabelTxt"] = templatedata["ccxParameters"]["lineLabelTxt"] + ccxExtension
         templatedata["ccxParameters"]["lineDisplayName"] = UserFullName + templatedata["ccxParameters"]["lineDisplayName"]
 
-        #Adding the second line appearence will remove the primary, so we have to include it in
-        #the update. the Index value for the CCX line tells the API which button appearance to place
-        #the IPCC line.
-        #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
-        #Define a dictionary that will store the primary line in Index 1 and set the CCX Line
-        #on the button index configured in the template
+        #Adding the second line appearence will remove any other lines on the phone that we may have added
+        #above in the script, so we have to include it them in the update. 
+        #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
+        
+        #Define a dictionary that we will populate with any lines already on the phone
         ipccLine = {
                     "name": "",
                     "lines": {
-                        "line": [
-                            {
-                                "index": 1,
-                                "dirn": {
-                                    "pattern": "",
-                                    "routePartitionName": {
-                                        "_value_1": ""
-                                    }
-                                }
-                            },
-                            {
-                                "index": templatedata["ccxParameters"]["lineAppearanceNum"],
-                                "label": templatedata["ccxParameters"]["lineLabelTxt"],
-                                "display": templatedata["ccxParameters"]["lineDisplayName"],
-                                "dirn": {
-                                    "pattern": ccxExtension,
-                                    "routePartitionName": {
-                                        "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
-                                    }
-                                },
-                                "displayAscii": templatedata["ccxParameters"]["lineDisplayName"],
-                                "e164Mask": templatedata["ccxParameters"]["e164Mask"],
-                                "maxNumCalls": 2,
-                                "busyTrigger": 1
-                            }
-                        ]
+                        "line": []
                     }
                 }
 
-        #Adding a line to a device wipes out existing lines so we need to get the current phone settings
-        #and apply the new IPCC line to the phone.
-        #https://community.cisco.com/t5/management/axl-update-device-profile-line-appearance/m-p/4062936#M3374
-        
         #A CCX Agent Line can only be assigned to one device, it cannot be a shared line appearence
         #So we will need to add it to the device type defined in the Template
         ccxDeviceType = str(templatedata["ccxParameters"]["ipccDevType"])
@@ -1025,13 +998,45 @@ if templatedata["configurations"]["CCX"]:
             ipccDevice = service.getDeviceProfile(name=templatedata["deviceProfile"]["name"])
             ipccLine["name"] = templatedata["deviceProfile"]["name"]
 
-            #Update the IPCC Line Dictionary with the existing Primary number on the device
-            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
-                ipccDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["pattern"]
+            #Loop through the lines already configured learned from AXL and add them to the update
+            # or they will be tossed
             
-            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
-                ipccDevice["return"]["deviceProfile"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+            #Loop through the Lines Returned by the device
+            for line in ipccDevice["return"]["deviceProfile"]["lines"]["line"]:
+                lineFromDevice = {
+                        "index": line["index"],
+                        "dirn": {
+                        "pattern": line["dirn"]["pattern"],
+                        "routePartitionName": {
+                            "_value_1": line["dirn"]["routePartitionName"]["_value_1"]
+                        }
+                    }
+                }
 
+                #Append that to the dictionary that will configure the device
+                ipccLine["lines"]["line"].append(lineFromDevice)
+
+            #The Index value for the CCX line tells the API which button appearance to place the IPCC line.
+            #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
+            ipccLine["lines"]["line"].append({
+                "index": templatedata["ccxParameters"]["lineAppearanceNum"],
+                "label": templatedata["ccxParameters"]["lineLabelTxt"],
+                "display": templatedata["ccxParameters"]["lineDisplayName"],
+                "dirn": {
+                    "pattern": ccxExtension,
+                    "routePartitionName": {
+                    "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
+                    }
+                },
+                "displayAscii": templatedata["ccxParameters"]["lineDisplayName"],
+                "e164Mask": templatedata["ccxParameters"]["e164Mask"],
+                "maxNumCalls": 2,
+                "busyTrigger": 1
+            })
+    
+            #Debug Command, Remove in final tool
+            #print(json.dumps(ipccLine, indent=4, separators=(',', ': ')))
+            
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
@@ -1047,13 +1052,38 @@ if templatedata["configurations"]["CCX"]:
             ipccDevice = service.getPhone(name=csfProfileName)
             ipccLine["name"] = csfProfileName
 
-            #Update the IPCC Line Dictionary with the existing Primary number on the device
-            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
-                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
-            
-            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
-                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
-            
+            for line in ipccDevice["return"]["phone"]["lines"]["line"]:
+                lineFromDevice = {
+                        "index": line["index"],
+                        "dirn": {
+                        "pattern": line["dirn"]["pattern"],
+                        "routePartitionName": {
+                            "_value_1": line["dirn"]["routePartitionName"]["_value_1"]
+                        }
+                    }
+                }
+
+                #Append that to the dictionary that will configure the device
+                ipccLine["lines"]["line"].append(lineFromDevice)
+
+            #The Index value for the CCX line tells the API which button appearance to place the IPCC line.
+            #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
+            ipccLine["lines"]["line"].append({
+                "index": templatedata["ccxParameters"]["lineAppearanceNum"],
+                "label": templatedata["ccxParameters"]["lineLabelTxt"],
+                "display": templatedata["ccxParameters"]["lineDisplayName"],
+                "dirn": {
+                    "pattern": ccxExtension,
+                    "routePartitionName": {
+                    "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
+                    }
+                },
+                "displayAscii": templatedata["ccxParameters"]["lineDisplayName"],
+                "e164Mask": templatedata["ccxParameters"]["e164Mask"],
+                "maxNumCalls": 2,
+                "busyTrigger": 1
+            })
+
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
             # generates a type error.  Other AXL Methods seem to work (list and add methods)
@@ -1063,17 +1093,43 @@ if templatedata["configurations"]["CCX"]:
             associateToAppUser(templatedata["ccxParameters"]["jtapiRMCMUser"],csfProfileName)
             
         else:
-            #If we're not configuring CCX on Jabber or Extension mobilility, then it must be a physical phone
+            #If we're not configuring CCX on Jabber or Extension mobility, then it must be a physical phone
             #Collect the Physical Profile Information
             ipccDevice = service.getPhone(name=newUserPhone)
             ipccLine["name"] = newUserPhone
 
-            #Update the IPCC Line Dictionary with the existing Primary number on the device
-            ipccLine["lines"]["line"][0]["dirn"]["pattern"] = \
-                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["pattern"]
+            for line in ipccDevice["return"]["phone"]["lines"]["line"]:
+                lineFromDevice = {
+                        "index": line["index"],
+                        "dirn": {
+                        "pattern": line["dirn"]["pattern"],
+                        "routePartitionName": {
+                            "_value_1": line["dirn"]["routePartitionName"]["_value_1"]
+                        }
+                    }
+                }
             
-            ipccLine["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"] = \
-                ipccDevice["return"]["phone"]["lines"]["line"][0]["dirn"]["routePartitionName"]["_value_1"]
+                #Append that to the dictionary that will configure the device
+                ipccLine["lines"]["line"].append(lineFromDevice)
+
+            #The Index value for the CCX line tells the API which button appearance to place the IPCC line.
+            #Note: Maxcalls 2, busytrigger 1 is a CCX Requirement for an IPCC extension.
+            ipccLine["lines"]["line"].append({
+                "index": templatedata["ccxParameters"]["lineAppearanceNum"],
+                "label": templatedata["ccxParameters"]["lineLabelTxt"],
+                "display": templatedata["ccxParameters"]["lineDisplayName"],
+                "dirn": {
+                    "pattern": ccxExtension,
+                    "routePartitionName": {
+                    "_value_1": templatedata["ccxline"]["routePartitionName"]["_value_1"]
+                    }
+                },
+                "displayAscii": templatedata["ccxParameters"]["lineDisplayName"],
+                "e164Mask": templatedata["ccxParameters"]["e164Mask"],
+                "maxNumCalls": 2,
+                "busyTrigger": 1
+            })
+
             
             #For some reason, the dictionary needs to use the ** to pass
             # the elements to the AXL Update Method.  Referencing phone=template["phone"]
