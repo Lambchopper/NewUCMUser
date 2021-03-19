@@ -12,6 +12,7 @@ import sys
 #Import Stuff for data processing
 import json
 import re
+import getpass
 
 #Import Stuff for AXL API Interactions
 import os.path as abspath
@@ -24,6 +25,41 @@ from zeep.cache import SqliteCache
 from zeep.transports import Transport
 #===================Setup The Script ===================
 
+#===================Collect the Creds ===================
+#The creds can be stored in plain text in the .env file or for to stream line
+#testing and use or those fields can be left empty for security and the user
+#will be prompted at run time.
+ucmHost = os.getenv('CUCM_ADDRESS')
+axlUserID = os.getenv('AXL_USERNAME')
+axlPassword = os.getenv('AXL_PASSWORD')
+
+if ucmHost == "":
+    #If the User ID is not stored in the .env file have user enter it
+    #This account needs to have enough rights to configure the elements
+    #defined in the template
+    print("="*75)
+    print("The Publisher is not configured in the .env file")
+    print("Please enter the IP or FQDN for the Call Manager Publisher:")
+    print("="*75)
+    axlUserID = input("Enter Pub Address: ")
+
+if axlUserID == "":
+    #If the User ID is not stored in the .env file have user enter it
+    #This account needs to have enough rights to configure the elements
+    #defined in the template
+    print("="*75)
+    print("No UserID in .env file")
+    print("Please enter the Call Manager User ID:")
+    print("="*75)
+    axlUserID = input("Enter UID: ")
+
+if axlPassword == "":
+    #If the Password is not stored in the .env file have user enter it
+    print("="*75)
+    print("Please enter the Call Manager Password:")
+    print("="*75)
+    axlUserID = getpass.getpass(prompt="Enter PWD: ")
+
 #===================Setup Zeep Soap Client===================
 print("="*75)
 print("Starting AXL Client.")
@@ -31,8 +67,7 @@ print("="*75)
 #Collect path to the UCM AXL Schema
 #The schema files are downloaded from UCM > Applications > Plugins > Cisco AXL Toolkit
 wsdl = os.path.abspath('axlsqltoolkit/schema/current/AXLAPI.wsdl')
-#location = 'https://{host}:8443/axl/'.format(host=strUCMIP)
-location = 'https://{host}:8443/axl/'.format(host=os.getenv('CUCM_ADDRESS'))
+location = 'https://{host}:8443/axl/'.format(host=ucmHost)
 binding = "{http://www.cisco.com/AXLAPIService/}AXLAPIBinding"
 
 # Define http session and allow insecure connections
@@ -41,8 +76,7 @@ session.verify = False
 requests.packages.urllib3.disable_warnings()
 
 #Next Lines are used so I don't have to type passwords for each test
-#session.auth = HTTPBasicAuth(strUCMAdmUserID, strUCMAdmPassword)
-session.auth = HTTPBasicAuth(os.getenv('AXL_USERNAME'), os.getenv('AXL_PASSWORD'))
+session.auth = HTTPBasicAuth(axlUserID, axlPassword)
 
 #Define a SOAP client
 transport = Transport(cache=SqliteCache(), session=session, timeout=20)
@@ -1142,5 +1176,4 @@ if templatedata["configurations"]["CCX"]:
         #Associate the IPCC Line with the user
         response = service.updateUser(userid=UserID,ipccExtension=ccxExtension,ipccRoutePartition=templatedata["ccxline"]["routePartitionName"]["_value_1"])
 
-        #Also seems to be a bug with updating existing IPCC line
 
