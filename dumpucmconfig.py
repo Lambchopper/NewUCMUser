@@ -81,7 +81,7 @@ print("Collect UCM Object")
 print("="*50)
 
 #Change Object Type for personal Reference
-#ucmObjectType = "getButtonTemplate"
+ucmObjectType = "getButtonTemplate"
 #Set ucmObject Variable for your needs
 #ucmObject = '{4826E8A0-2143-0653-7EBF-1ECF441E3097}'
 ucmObject = 'EM-John Dough'
