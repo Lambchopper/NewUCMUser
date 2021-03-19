@@ -87,8 +87,8 @@ json		Used for retrieving and utilizing stored templates (Zeep formats the Soap 
 			compatible format)
 dotenv		This can be used to automate the UCM authentication.  It requires a text file that hard codes
 			the UCM UID and PWD.  For security purposes this should only be used in testing. This script
-			will prompt for user IDs and PWDs in its final form, but the presence of this module is there
-			to speed debugging.  More information and exammples can be found here:
+			will prompt for user IDs, PWDs and FQDN of the pub in its final form, but the presence of this
+			module is there to speed debugging.  More information and exammples can be found here:
 			https://github.com/CiscoDevNet/axl-python-zeep-samples
 
 ================================================================================

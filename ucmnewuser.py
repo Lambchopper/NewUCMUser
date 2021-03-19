@@ -38,17 +38,15 @@ if ucmHost == "":
     #This account needs to have enough rights to configure the elements
     #defined in the template
     print("="*75)
-    print("The Publisher is not configured in the .env file")
     print("Please enter the IP or FQDN for the Call Manager Publisher:")
     print("="*75)
-    axlUserID = input("Enter Pub Address: ")
+    ucmHost = input("Enter Pub Address: ")
 
 if axlUserID == "":
     #If the User ID is not stored in the .env file have user enter it
     #This account needs to have enough rights to configure the elements
     #defined in the template
     print("="*75)
-    print("No UserID in .env file")
     print("Please enter the Call Manager User ID:")
     print("="*75)
     axlUserID = input("Enter UID: ")
@@ -58,7 +56,7 @@ if axlPassword == "":
     print("="*75)
     print("Please enter the Call Manager Password:")
     print("="*75)
-    axlUserID = getpass.getpass(prompt="Enter PWD: ")
+    axlPassword = getpass.getpass(prompt="Enter PWD: ")
 
 #===================Setup Zeep Soap Client===================
 print("="*75)
@@ -410,21 +408,22 @@ elif templatedata["configurations"]["CCX"] and templatedata["ccxParameters"]["ip
     newUserPhone = input("Phone: ")
     print("="*75)
 
-for checkInput in range(1, 4):
-    if checkInput == 3:
-          print("Incorrect Input")
-          print("Failed too many times, terminating script")
-          exit()
-    
-    if re.search("SEP[0-9A-F]{2}([-:]?)[0-9A-F]{2}(\\1[0-9A-F]{2}){4}$", newUserPhone.upper()):
-        newUserPhone = newUserPhone.upper()
-        break
-    else:
-        print("Phone entered is not in the format SEPxxxxxxxxxxxx where the Xs match the")
-        print("phone's MAC address. Please Try again.")
-        print("="*75)
-        newUserPhone = input("Phone: ")
-        print("="*75)
+if templatedata["configurations"]["phoneSettings"]:
+    for checkInput in range(1, 4):
+        if checkInput == 3:
+              print("Incorrect Input")
+              print("Failed too many times, terminating script")
+              exit()
+        
+        if re.search("SEP[0-9A-F]{2}([-:]?)[0-9A-F]{2}(\\1[0-9A-F]{2}){4}$", newUserPhone.upper()):
+            newUserPhone = newUserPhone.upper()
+            break
+        else:
+            print("Phone entered is not in the format SEPxxxxxxxxxxxx where the Xs match the")
+            print("phone's MAC address. Please Try again.")
+            print("="*75)
+            newUserPhone = input("Phone: ")
+            print("="*75)
 
 print("="*75)
 print("Please enter the User's Email Address")
@@ -462,7 +461,8 @@ print('{:17}{:30}'.format("Last Name: ", UserLastName))
 print('{:17}{:30}'.format("Full Name: ", UserFullName))
 print('{:17}{:30}'.format("User ID: ", UserID))
 print('{:17}{:30}'.format("Extension: ", Extension))
-print('{:17}{:30}'.format("New Phone: ", newUserPhone))
+if templatedata["configurations"]["phoneSettings"]:
+    print('{:17}{:30}'.format("New Phone: ", newUserPhone))
 print('{:17}{:30}'.format("Email Address: ", EmailAddress))
 if templatedata["configurations"]["SNR"]:
     print('{:17}{:30}'.format("Cell Number: ", mobileNum))
@@ -633,7 +633,18 @@ except:
     print("="*75)
     print("Creating Enabled Local User: " + templatedata["user"]["displayName"])
     print("="*75)
-    response = service.addUser(templatedata["user"])
+    print()
+    
+    #If we get here and the Axl Call Fails, it's likey the AXL Creds used for the script were wrong
+    try:
+        response = service.addUser(templatedata["user"])
+    except:
+        print("="*75)
+        print("We failed the first AXL Connection, Please check your User ID and Passord")
+        print("and try again, Terminating Script")
+        print("="*75)
+        print()
+        sys.exit()
 
 #If the user Exists we need to see if the user is LDAP Synced Or Not because not 
 # all fields are editable for an LDAP User Account.
