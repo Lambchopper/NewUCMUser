@@ -1,0 +1,952 @@
+{
+	"configurations": {
+		"deviceProfile": true,
+		"loggedOutExtension": true,
+		"phoneSettings": true,
+		"jabberCSF": true,
+		"jabberAndroid": true,
+		"jabberiPhone": true,
+		"jabberTablet": true,
+		"SNR": false,
+		"speeddials": true,
+		"secondLine": true,
+		"CCX": true
+	},
+	"user": {
+        "firstName": "",
+        "displayName": "",
+        "lastName": "",
+        "userid": "",
+        "password": "Ph0n3sRcuwl",
+        "pin": "357159",
+        "mailid": "",
+        "department": "",
+        "manager": "",
+        "associatedDevices": {
+            "device": [
+            ]
+        },
+        "associatedGroups": {
+            "userGroup": [
+                {
+                    "name": "Standard CTI Allow Control of Phones supporting Rollover Mode",
+                    "userRoles": {
+                        "userRole": [
+                            "Standard CTI Allow Control of Phones supporting Rollover Mode"
+                        ]
+                    }
+                },
+                {
+                    "name": "Standard CTI Enabled",
+                    "userRoles": {
+                        "userRole": [
+                            "Standard CTI Enabled"
+                        ]
+                    }
+                },
+                {
+                    "name": "Standard CTI Allow Control of Phones supporting Connected Xfer and conf",
+                    "userRoles": {
+                        "userRole": [
+                            "Standard CTI Allow Control of Phones supporting Connected Xfer and conf"
+                        ]
+                    }
+                },
+                {
+                    "name": "Standard CCM End Users",
+                    "userRoles": {
+                        "userRole": [
+                            "Standard CCM End Users",
+                            "Standard CCMUSER Administration"
+                        ]
+                    }
+                }
+            ]
+        },
+        "enableCti": "true",
+        "digestCredentials": "",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "enableMobility": "false",
+        "enableMobileVoiceAccess": "false",
+        "maxDeskPickupWaitTime": 10000,
+        "remoteDestinationLimit": 4,
+        "status": 1,
+        "enableEmcc": "false",
+        "homeCluster": "true",
+        "imAndPresenceEnable": "true",
+        "serviceProfile": {
+            "_value_1": "Internal-Jabber-CUPS"
+        },
+        "directoryUri": "",
+        "telephoneNumber": "",
+        "title": "",
+        "mobileNumber": "",
+        "homeNumber": "",
+        "pagerNumber": "",
+        "selfService": "",
+        "userIdentity": "",
+        "nameDialing": "",
+        "ipccExtension": {
+            "_value_1": ""
+        },
+        "ipccRoutePartition": {
+            "_value_1": ""
+        },
+        "enableUserToHostConferenceNow": "true",
+        "attendeesAccessCode": ""
+    },
+    "deviceProfile": {
+        "name": "EM-",
+        "description": "Device Profile",
+        "product": "Cisco 8865",
+		"class": "Device Profile",
+        "protocol": "SIP",
+        "protocolSide": "User",
+		"userHoldMohAudioSourceId": null,
+        "phoneTemplateName": {
+            "_value_1": "Standard 8865 SIP NOC User"
+        },
+        "alwaysUsePrimeLine": "On",
+        "alwaysUsePrimeLineForVoiceMessage": "On",
+        "softkeyTemplateName": {
+            "_value_1": "Standard User cBarge"
+        },
+    	"lines": {
+            "line": [
+			    {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "missedCallLogging": "true",
+				    "associatedEndusers": {
+                        "enduser": {
+                            "userId": ""
+                        }
+                    }
+                }
+			]
+    	}
+    },
+	"loggedOutExtension": {
+		"label": "Hotel Cube",
+		"pattern": "4444",
+		"routePartitionName": "PT_Line1",
+		"e164Mask": "6315551234"
+	},
+    "line": {
+        "pattern": "",
+        "description": "",
+        "usage": "Device",
+        "routePartitionName": {
+            "_value_1": "PT_Line1"
+        },
+        "callForwardAll": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "LCSS_CFAExternal"
+            },
+            "secondaryCallingSearchSpaceName": {
+                "_value_1": "LCSS_CFAInternal"
+            },
+			"destination": null
+        },
+        "callForwardBusy": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardBusyInt": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+		    "destination": null
+        },
+        "callForwardNoAnswer": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNoAnswerInt": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegistered": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegisteredInt": {
+            "forwardToVoiceMail": "true",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "alertingName": "",
+        "asciiAlertingName": "",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "shareLineAppearanceCssName": {
+            "_value_1": "LCSS_International"
+        },
+        "voiceMailProfileName": {
+            "_value_1": "UnityConnection"
+        },
+        "allowCtiControlFlag": "true",
+        "active": "true"
+    },
+	"phone": {
+        "name": "",
+        "description": " Phone",
+        "product": "Cisco 8865",
+        "class": "Phone",
+        "protocol": "SIP",
+        "callingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+        "devicePoolName": {
+            "_value_1": "DP_Phones"
+        },
+        "commonDeviceConfigName": {
+            "_value_1": "Standard User"
+        },
+        "commonPhoneConfigName": {
+            "_value_1": "Standard Common Phone Profile"
+        },
+        "locationName": {
+            "_value_1": "Loc_HQ"
+        },
+        "mediaResourceListName": {
+            "_value_1": ""
+        },
+        "networkHoldMohAudioSourceId": "2",
+        "userHoldMohAudioSourceId": "2",
+        "automatedAlternateRoutingCssName": {
+            "_value_1": "DCSS_AAR"
+        },
+        "retryVideoCallAsAudio": "true",
+        "securityProfileName": {
+            "_value_1": "Cisco 8865 - Standard SIP Non-Secure Profile"
+        },
+        "sipProfileName": {
+            "_value_1": "Video Phone SIP Profile Test"
+        },
+        "cgpnTransformationCssName": {
+            "_value_1": null
+        },
+        "useDevicePoolCgpnTransformCss": "true",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                                "userId": ""
+                            }
+                    },
+                    "missedCallLogging": "true"
+                }
+            ]
+        },
+        "phoneTemplateName": {
+            "_value_1": "Standard 8865 SIP NOC User"
+        },
+        "softkeyTemplateName": {
+            "_value_1": "Standard User"
+        },
+        "defaultProfileName": {
+            "_value_1": ""
+        },
+        "enableExtensionMobility": "true",
+        "builtInBridgeStatus": "On",
+        "ownerUserName": {
+            "_value_1": null
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "allowCtiControlFlag": "true",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "mobilityUserIdName": {
+            "_value_1": ""
+        },
+        "dialRulesName": {
+            "_value_1": ""
+        },
+        "sshUserId": "",
+        "sshPwd": "",
+        "digestUser": "",
+        "alwaysUsePrimeLine": "On",
+        "alwaysUsePrimeLineForVoiceMessage": "On",
+        "featureControlPolicy": {
+            "_value_1": ""
+        }
+    },
+	"jabberCSF": {
+        "name": "CSF",
+        "description": " Jabber Softphone",
+        "product": "Cisco Unified Client Services Framework",
+        "class": "Phone",
+        "protocol": "SIP",
+        "callingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+        "devicePoolName": {
+            "_value_1": "DP_RemotePhones"
+        },
+        "commonDeviceConfigName": {
+            "_value_1": "Standard User"
+        },
+        "commonPhoneConfigName": {
+            "_value_1": "Standard Common Phone Profile"
+        },
+        "locationName": {
+            "_value_1": "Loc_HQ"
+        },
+        "mediaResourceListName": {
+            "_value_1": null
+        },
+        "networkHoldMohAudioSourceId": null,
+        "userHoldMohAudioSourceId": null,
+        "automatedAlternateRoutingCssName": {
+            "_value_1": null
+        },
+        "retryVideoCallAsAudio": "true",
+        "securityProfileName": {
+            "_value_1": "Cisco Unified Client Services Framework - Standard SIP Non-Secure Profile"
+        },
+        "sipProfileName": {
+            "_value_1": "Jabber for Windows"
+        },
+        "cgpnTransformationCssName": {
+            "_value_1": null
+        },
+        "useDevicePoolCgpnTransformCss": "true",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                                "userId": ""
+                            }
+                    },
+                    "missedCallLogging": "true"
+                }
+            ]
+        },
+        "phoneTemplateName": {
+            "_value_1": "Standard Client Services Framework"
+        },
+        "softkeyTemplateName": {
+            "_value_1": null
+        },
+        "defaultProfileName": {
+            "_value_1": null
+        },
+        "enableExtensionMobility": "false",
+        "builtInBridgeStatus": "Off",
+        "ownerUserName": {
+            "_value_1": ""
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "allowCtiControlFlag": "true",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "mobilityUserIdName": {
+            "_value_1": ""
+        },
+        "dialRulesName": {
+            "_value_1": ""
+        },
+        "sshUserId": null,
+        "sshPwd": null,
+        "digestUser": null,
+        "alwaysUsePrimeLine": "Default",
+        "alwaysUsePrimeLineForVoiceMessage": "Default",
+        "featureControlPolicy": {
+            "_value_1": null
+        }
+    },
+	"jabberAndroid": {
+        "name": "BOT",
+        "description": " Jabber Android Softphone",
+        "product": "Cisco Dual Mode for Android",
+        "class": "Phone",
+        "protocol": "SIP",
+        "callingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+        "devicePoolName": {
+            "_value_1": "DP_RemotePhones"
+        },
+        "commonDeviceConfigName": {
+            "_value_1": "Standard User"
+        },
+        "commonPhoneConfigName": {
+            "_value_1": "Standard Common Phone Profile"
+        },
+        "locationName": {
+            "_value_1": "Loc_HQ"
+        },
+        "mediaResourceListName": {
+            "_value_1": null
+        },
+        "networkHoldMohAudioSourceId": null,
+        "userHoldMohAudioSourceId": null,
+        "automatedAlternateRoutingCssName": {
+            "_value_1": null
+        },
+        "retryVideoCallAsAudio": "true",
+        "securityProfileName": {
+            "_value_1": "Cisco Dual Mode for Android - Standard SIP Non-Secure Profile"
+        },
+        "sipProfileName": {
+            "_value_1": "Jabber Mobile Device"
+        },
+        "cgpnTransformationCssName": {
+            "_value_1": null
+        },
+        "useDevicePoolCgpnTransformCss": "true",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                                "userId": ""
+                            }
+                    },
+                    "missedCallLogging": "true"
+                }
+            ]
+        },
+        "phoneTemplateName": {
+            "_value_1": "Standard Dual Mode for Android"
+        },
+        "softkeyTemplateName": {
+            "_value_1": null
+        },
+        "defaultProfileName": {
+            "_value_1": null
+        },
+        "enableExtensionMobility": "false",
+        "builtInBridgeStatus": "Off",
+        "ownerUserName": {
+            "_value_1": ""
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "allowCtiControlFlag": "true",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "mobilityUserIdName": {
+            "_value_1": ""
+        },
+        "dialRulesName": {
+            "_value_1": ""
+        },
+        "sshUserId": null,
+        "sshPwd": null,
+        "digestUser": null,
+        "alwaysUsePrimeLine": "Default",
+        "alwaysUsePrimeLineForVoiceMessage": "Default",
+        "featureControlPolicy": {
+            "_value_1": null
+        }
+    },
+	"jabberiPhone": {
+        "name": "TCT",
+        "description": " Jabber iPhone Softphone",
+        "product": "Cisco Dual Mode for iPhone",
+        "class": "Phone",
+        "protocol": "SIP",
+        "callingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+        "devicePoolName": {
+            "_value_1": "DP_RemotePhones"
+        },
+        "commonDeviceConfigName": {
+            "_value_1": "Standard User"
+        },
+        "commonPhoneConfigName": {
+            "_value_1": "Standard Common Phone Profile"
+        },
+        "locationName": {
+            "_value_1": "Loc_HQ"
+        },
+        "mediaResourceListName": {
+            "_value_1": null
+        },
+        "networkHoldMohAudioSourceId": null,
+        "userHoldMohAudioSourceId": null,
+        "automatedAlternateRoutingCssName": {
+            "_value_1": null
+        },
+        "retryVideoCallAsAudio": "true",
+        "securityProfileName": {
+            "_value_1": "Cisco Dual Mode for iPhone - Standard SIP Non-Secure Profile"
+        },
+        "sipProfileName": {
+            "_value_1": "Jabber Mobile Device"
+        },
+        "cgpnTransformationCssName": {
+            "_value_1": null
+        },
+        "useDevicePoolCgpnTransformCss": "true",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                                "userId": ""
+                            }
+                    },
+                    "missedCallLogging": "true"
+                }
+            ]
+        },
+        "phoneTemplateName": {
+            "_value_1": "Standard Dual Mode for iPhone"
+        },
+        "softkeyTemplateName": {
+            "_value_1": null
+        },
+        "defaultProfileName": {
+            "_value_1": null
+        },
+        "enableExtensionMobility": "false",
+        "builtInBridgeStatus": "Off",
+        "ownerUserName": {
+            "_value_1": ""
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "allowCtiControlFlag": "true",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "mobilityUserIdName": {
+            "_value_1": ""
+        },
+        "dialRulesName": {
+            "_value_1": ""
+        },
+        "sshUserId": null,
+        "sshPwd": null,
+        "digestUser": null,
+        "alwaysUsePrimeLine": "Default",
+        "alwaysUsePrimeLineForVoiceMessage": "Default",
+        "featureControlPolicy": {
+            "_value_1": null
+        }
+    },
+	"jabberTablet": {
+        "name": "TAB",
+        "description": " Jabber Tablet Softphone",
+        "product": "Cisco Jabber for Tablet",
+        "class": "Phone",
+        "protocol": "SIP",
+        "callingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+        "devicePoolName": {
+            "_value_1": "DP_RemotePhones"
+        },
+        "commonDeviceConfigName": {
+            "_value_1": "Standard User"
+        },
+        "commonPhoneConfigName": {
+            "_value_1": "Standard Common Phone Profile"
+        },
+        "locationName": {
+            "_value_1": "Loc_HQ"
+        },
+        "mediaResourceListName": {
+            "_value_1": null
+        },
+        "networkHoldMohAudioSourceId": null,
+        "userHoldMohAudioSourceId": null,
+        "automatedAlternateRoutingCssName": {
+            "_value_1": null
+        },
+        "retryVideoCallAsAudio": "true",
+        "securityProfileName": {
+            "_value_1": "Cisco Jabber for Tablet - Standard SIP Non-Secure Profile"
+        },
+        "sipProfileName": {
+            "_value_1": "Jabber Mobile Device"
+        },
+        "cgpnTransformationCssName": {
+            "_value_1": null
+        },
+        "useDevicePoolCgpnTransformCss": "true",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                                "userId": ""
+                            }
+                    },
+                    "missedCallLogging": "true"
+                }
+            ]
+        },
+        "phoneTemplateName": {
+            "_value_1": "Standard Jabber for Tablet"
+        },
+        "softkeyTemplateName": {
+            "_value_1": null
+        },
+        "defaultProfileName": {
+            "_value_1": null
+        },
+        "enableExtensionMobility": "false",
+        "builtInBridgeStatus": "Off",
+        "ownerUserName": {
+            "_value_1": ""
+        },
+        "subscribeCallingSearchSpaceName": {
+            "_value_1": "DCSS_Presence"
+        },
+        "allowCtiControlFlag": "true",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "mobilityUserIdName": {
+            "_value_1": ""
+        },
+        "dialRulesName": {
+            "_value_1": ""
+        },
+        "sshUserId": null,
+        "sshPwd": null,
+        "digestUser": null,
+        "alwaysUsePrimeLine": "Default",
+        "alwaysUsePrimeLineForVoiceMessage": "Default",
+        "featureControlPolicy": {
+            "_value_1": null
+        }
+    },
+    "remoteDestinationProfile": {
+        "name": "RDP-",
+        "description": "",
+		"product": "Remote Destination Profile",
+        "class": "Remote Destination Profile",
+        "protocol": "Remote Destination",
+        "protocolSide": "User",
+		"callingSearchSpaceName": "DCSS_Phone",
+		"devicePoolName": "DP_Phones",
+		"networkHoldMohAudioSourceId": "",
+		"userHoldMohAudioSourceId": "",
+        "lines": {
+            "line": [
+                {
+                    "index": 1,
+                    "label": "",
+                    "display": "",
+                    "dirn": {
+                        "pattern": "",
+                        "routePartitionName": {
+                            "_value_1": "PT_Line1"
+                        }
+                    },
+                    "displayAscii": "",
+                    "e164Mask": "631555XXXX",
+                    "associatedEndusers": {
+                        "enduser": {
+                            "userId": ""
+                        }
+                    }
+                }
+            ]
+        },
+        "userId": "",
+        "rerouteCallingSearchSpaceName": {
+            "_value_1": "DCSS_Phone"
+        },
+		"callInfoPrivacyStatus": "Default",
+		"userId":""
+    },
+    "remoteDestination": {
+        "name": "RD-",
+        "destination": "",
+        "answerTooSoonTimer": 1500,
+        "answerTooLateTimer": 19000,
+        "delayBeforeRingingCell": 4000,
+        "ownerUserId": "",
+		"enableUnifiedMobility": "true",
+        "remoteDestinationProfileName": "",
+		"enableExtendAndConnect": "false",
+        "isMobilePhone": "true",
+        "enableMobileConnect": "true",
+		"lineAssociations": {
+		    "lineAssociation": {
+				"pattern": "",
+				"routePartitionName": ""
+            }
+		},
+        "timeZone": "Etc/GMT",
+        "singleNumberReachVoicemail": "Use System Default",
+        "dialViaOfficeReverseVoicemail": "Use System Default"
+    },
+	"speeddials": {
+        "speeddial": [
+            {
+                "dirn": "5555",
+                "label": "NOC DX70",
+                "index": 1
+            },
+			{
+                "dirn": "918005532447",
+                "label": "Cisco TAC",
+                "index": 2
+            }
+		]
+    },
+	"secondLine": {
+        "pattern": "7777",
+        "description": "Shared Line",
+        "usage": "Device",
+        "routePartitionName": {
+            "_value_1": "PT_Line1"
+        },
+        "callForwardAll": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "LCSS_CFAExternal"
+            },
+            "secondaryCallingSearchSpaceName": {
+                "_value_1": "LCSS_HQ_CFAInternal"
+            },
+			"destination": null
+        },
+        "callForwardBusy": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardBusyInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+		    "destination": null
+        },
+        "callForwardNoAnswer": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNoAnswerInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegistered": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegisteredInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "alertingName": "Shared Line",
+        "asciiAlertingName": "Shared Line",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "shareLineAppearanceCssName": {
+            "_value_1": "LCSS_Longdistance"
+        },
+        "voiceMailProfileName": {
+            "_value_1": ""
+        },
+        "allowCtiControlFlag": "true",
+        "active": "true"
+    },
+	"secondLineParameters": {
+		"lineAppearanceNum": 2,
+		"e164Mask": "631555XXXX"
+	},
+	"ccxline": {
+        "pattern": "",
+        "description": " Agent Line",
+        "usage": "Device",
+        "routePartitionName": {
+            "_value_1": "PT_Line1"
+        },
+        "callForwardAll": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "LCSS_CFAExternal"
+            },
+            "secondaryCallingSearchSpaceName": {
+                "_value_1": "LCSS_CFAInternal"
+            },
+			"destination": null
+        },
+        "callForwardBusy": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardBusyInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+		    "destination": null
+        },
+        "callForwardNoAnswer": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNoAnswerInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegistered": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "callForwardNotRegisteredInt": {
+            "forwardToVoiceMail": "false",
+            "callingSearchSpaceName": {
+                "_value_1": "CSS_Voicemail"
+            },
+			"destination": null
+        },
+        "alertingName": " Agent Line",
+        "asciiAlertingName": " Agent Line",
+        "presenceGroupName": {
+            "_value_1": "Standard Presence group"
+        },
+        "shareLineAppearanceCssName": {
+            "_value_1": "LCSS_International"
+        },
+        "voiceMailProfileName": {
+            "_value_1": ""
+        },
+        "allowCtiControlFlag": "true",
+        "active": "true"
+    },
+	"ccxParameters": {
+		"agentLineUsePrimary": false,
+		"jtapiRMCMUser": "UCCXRMJtapi",
+		"e164Mask": "6315551234",
+		"lineLabelTxt": "Agent Line - ",
+		"lineDisplayName": " Agent Line",
+		"ipccDevType": "EMP",
+		"lineAppearanceNum": 3
+	}
+}
